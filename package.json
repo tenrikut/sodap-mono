@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "name": "sodap-mono",
+  "version": "1.0.0",
+  "main": "index.js",
+  "workspaces": [
+    "sodap",
+    "sodap-front"
+  ],
+  "license": "MIT"
+}

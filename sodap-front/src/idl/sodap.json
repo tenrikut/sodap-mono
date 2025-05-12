@@ -1,0 +1,1914 @@
+{
+  "address": "4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv",
+  "metadata": {
+    "name": "sodap",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "add_platform_admin",
+      "discriminator": [
+        161,
+        172,
+        63,
+        212,
+        254,
+        209,
+        243,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "admin_pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "admin_name",
+          "type": "string"
+        },
+        {
+          "name": "root_password",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "add_store_admin",
+      "discriminator": [
+        198,
+        151,
+        163,
+        65,
+        104,
+        162,
+        70,
+        38
+      ],
+      "accounts": [
+        {
+          "name": "store",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "store_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "admin_pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "role",
+          "type": {
+            "defined": {
+              "name": "AdminRoleType"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_or_update_user_profile",
+      "discriminator": [
+        179,
+        73,
+        133,
+        221,
+        229,
+        96,
+        217,
+        31
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "user_id",
+          "type": {
+            "option": "pubkey"
+          }
+        },
+        {
+          "name": "name",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "email",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "phone",
+          "type": {
+            "option": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "deactivate_product",
+      "discriminator": [
+        94,
+        118,
+        5,
+        80,
+        69,
+        37,
+        75,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "product_id",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "handle_transfer_hook",
+      "discriminator": [
+        190,
+        171,
+        237,
+        164,
+        179,
+        74,
+        238,
+        183
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_loyalty_mint",
+      "discriminator": [
+        124,
+        218,
+        206,
+        49,
+        20,
+        69,
+        141,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "store",
+          "writable": true
+        },
+        {
+          "name": "loyalty_mint_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  121,
+                  97,
+                  108,
+                  116,
+                  121,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "points_per_sol",
+          "type": "u64"
+        },
+        {
+          "name": "redemption_rate",
+          "type": "u64"
+        },
+        {
+          "name": "use_token2022",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "mint_loyalty_points",
+      "discriminator": [
+        179,
+        168,
+        105,
+        41,
+        246,
+        68,
+        35,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "store",
+          "writable": true
+        },
+        {
+          "name": "loyalty_mint_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  121,
+                  97,
+                  108,
+                  116,
+                  121,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "token_account",
+          "writable": true
+        },
+        {
+          "name": "mint_authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "recipient"
+        },
+        {
+          "name": "buyer"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "purchase_amount_lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "purchase_cart",
+      "discriminator": [
+        196,
+        33,
+        229,
+        130,
+        137,
+        89,
+        154,
+        199
+      ],
+      "accounts": [
+        {
+          "name": "store",
+          "writable": true
+        },
+        {
+          "name": "receipt",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "store_owner",
+          "writable": true
+        },
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "loyalty_mint_info",
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  121,
+                  97,
+                  108,
+                  116,
+                  121,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "token_account",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "mint_authority",
+          "writable": true,
+          "signer": true,
+          "optional": true
+        },
+        {
+          "name": "token_program",
+          "optional": true,
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "product_ids",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "quantities",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "total_amount_paid",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "redeem_loyalty_points",
+      "discriminator": [
+        187,
+        195,
+        185,
+        155,
+        179,
+        96,
+        149,
+        0
+      ],
+      "accounts": [
+        {
+          "name": "store",
+          "writable": true
+        },
+        {
+          "name": "loyalty_mint_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  111,
+                  121,
+                  97,
+                  108,
+                  116,
+                  121,
+                  95,
+                  109,
+                  105,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_mint",
+          "writable": true
+        },
+        {
+          "name": "token_account",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "signer": true
+        },
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "optional": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "points_to_redeem",
+          "type": "u64"
+        },
+        {
+          "name": "redeem_for_sol",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "refund_from_escrow",
+      "discriminator": [
+        52,
+        190,
+        158,
+        62,
+        194,
+        173,
+        200,
+        247
+      ],
+      "accounts": [
+        {
+          "name": "store",
+          "writable": true
+        },
+        {
+          "name": "store_owner",
+          "signer": true
+        },
+        {
+          "name": "buyer",
+          "writable": true
+        },
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "register_product",
+      "discriminator": [
+        224,
+        97,
+        195,
+        220,
+        124,
+        218,
+        78,
+        43
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "product_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "store_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "image_uri",
+          "type": "string"
+        },
+        {
+          "name": "price",
+          "type": "u64"
+        },
+        {
+          "name": "inventory",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "attributes",
+          "type": {
+            "vec": {
+              "defined": {
+                "name": "ProductAttribute"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "register_store",
+      "discriminator": [
+        63,
+        55,
+        152,
+        6,
+        167,
+        127,
+        89,
+        129
+      ],
+      "accounts": [
+        {
+          "name": "store",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  111,
+                  114,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "store_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "logo_uri",
+          "type": "string"
+        },
+        {
+          "name": "loyalty_config",
+          "type": {
+            "defined": {
+              "name": "LoyaltyConfig"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "release_escrow",
+      "discriminator": [
+        146,
+        253,
+        129,
+        233,
+        20,
+        145,
+        181,
+        206
+      ],
+      "accounts": [
+        {
+          "name": "store",
+          "writable": true
+        },
+        {
+          "name": "store_owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "store"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "remove_platform_admin",
+      "discriminator": [
+        182,
+        87,
+        52,
+        81,
+        16,
+        1,
+        172,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "admin_pubkey",
+          "type": "pubkey"
+        },
+        {
+          "name": "root_password",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "remove_store_admin",
+      "discriminator": [
+        20,
+        178,
+        174,
+        192,
+        18,
+        15,
+        252,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "store_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "admin_pubkey",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "scan_and_purchase",
+      "discriminator": [
+        123,
+        177,
+        142,
+        160,
+        80,
+        85,
+        135,
+        57
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "product_ids",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "quantities",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "user_id",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_product",
+      "discriminator": [
+        139,
+        180,
+        241,
+        126,
+        123,
+        240,
+        13,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "product_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "name",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "image_uri",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "price",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "inventory",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "attributes",
+          "type": {
+            "option": {
+              "vec": {
+                "defined": {
+                  "name": "ProductAttribute"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_store",
+      "discriminator": [
+        169,
+        49,
+        137,
+        251,
+        233,
+        234,
+        172,
+        103
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "store_id",
+          "type": "pubkey"
+        },
+        {
+          "name": "name",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "description",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "logo_uri",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "loyalty_config",
+          "type": {
+            "option": {
+              "defined": {
+                "name": "LoyaltyConfig"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Escrow",
+      "discriminator": [
+        31,
+        213,
+        123,
+        187,
+        186,
+        22,
+        218,
+        155
+      ]
+    },
+    {
+      "name": "LoyaltyMint",
+      "discriminator": [
+        121,
+        219,
+        194,
+        140,
+        80,
+        187,
+        176,
+        112
+      ]
+    },
+    {
+      "name": "Purchase",
+      "discriminator": [
+        33,
+        203,
+        1,
+        252,
+        231,
+        228,
+        8,
+        67
+      ]
+    },
+    {
+      "name": "Store",
+      "discriminator": [
+        130,
+        48,
+        247,
+        244,
+        182,
+        191,
+        30,
+        26
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AdminAdded",
+      "discriminator": [
+        23,
+        13,
+        37,
+        90,
+        130,
+        53,
+        75,
+        251
+      ]
+    },
+    {
+      "name": "AdminRemoved",
+      "discriminator": [
+        59,
+        133,
+        36,
+        27,
+        156,
+        79,
+        75,
+        146
+      ]
+    },
+    {
+      "name": "CartPurchased",
+      "discriminator": [
+        224,
+        208,
+        17,
+        224,
+        206,
+        127,
+        200,
+        205
+      ]
+    },
+    {
+      "name": "LoyaltyPointsEarned",
+      "discriminator": [
+        124,
+        20,
+        28,
+        29,
+        94,
+        218,
+        175,
+        31
+      ]
+    },
+    {
+      "name": "LoyaltyPointsRedeemed",
+      "discriminator": [
+        23,
+        105,
+        3,
+        227,
+        115,
+        164,
+        155,
+        2
+      ]
+    },
+    {
+      "name": "LoyaltyTokensMinted",
+      "discriminator": [
+        33,
+        246,
+        193,
+        3,
+        190,
+        56,
+        188,
+        46
+      ]
+    },
+    {
+      "name": "PlatformAdminAdded",
+      "discriminator": [
+        231,
+        252,
+        87,
+        10,
+        68,
+        133,
+        55,
+        246
+      ]
+    },
+    {
+      "name": "PlatformAdminRemoved",
+      "discriminator": [
+        253,
+        234,
+        128,
+        75,
+        56,
+        254,
+        40,
+        79
+      ]
+    },
+    {
+      "name": "PurchaseCompleted",
+      "discriminator": [
+        166,
+        14,
+        235,
+        151,
+        212,
+        162,
+        21,
+        41
+      ]
+    },
+    {
+      "name": "StoreRegistered",
+      "discriminator": [
+        8,
+        21,
+        234,
+        141,
+        147,
+        227,
+        16,
+        145
+      ]
+    },
+    {
+      "name": "StoreUpdated",
+      "discriminator": [
+        218,
+        7,
+        142,
+        56,
+        57,
+        63,
+        185,
+        211
+      ]
+    },
+    {
+      "name": "UserProfileUpdated",
+      "discriminator": [
+        137,
+        227,
+        236,
+        168,
+        126,
+        29,
+        3,
+        132
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Unauthorized access"
+    },
+    {
+      "code": 6001,
+      "name": "InsufficientPayment",
+      "msg": "Insufficient payment amount"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidCart",
+      "msg": "Invalid cart data"
+    },
+    {
+      "code": 6003,
+      "name": "ProductNotFound",
+      "msg": "Product not found"
+    },
+    {
+      "code": 6004,
+      "name": "InsufficientStock",
+      "msg": "Insufficient stock"
+    },
+    {
+      "code": 6005,
+      "name": "ArithmeticError",
+      "msg": "Arithmetic error"
+    },
+    {
+      "code": 6006,
+      "name": "InsufficientEscrowBalance",
+      "msg": "Insufficient escrow balance"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidMint",
+      "msg": "Invalid mint"
+    },
+    {
+      "code": 6008,
+      "name": "InsufficientLoyaltyPoints",
+      "msg": "Insufficient loyalty points"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidRedemption",
+      "msg": "Invalid redemption"
+    }
+  ],
+  "types": [
+    {
+      "name": "AdminAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "store_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin_pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "role_type",
+            "type": {
+              "defined": {
+                "name": "AdminRoleType"
+              }
+            }
+          },
+          {
+            "name": "added_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminRemoved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "store_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "admin_pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "removed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminRole",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin_pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "role_type",
+            "type": {
+              "defined": {
+                "name": "AdminRoleType"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminRoleType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Owner"
+          },
+          {
+            "name": "Manager"
+          },
+          {
+            "name": "Viewer"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CartPurchased",
+      "docs": [
+        "off‑chain log"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "store_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "product_uuids",
+            "type": {
+              "vec": {
+                "array": [
+                  "u8",
+                  16
+                ]
+              }
+            }
+          },
+          {
+            "name": "quantities",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "total_paid",
+            "type": "u64"
+          },
+          {
+            "name": "gas_fee",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Escrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "store",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoyaltyConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "points_per_dollar",
+            "type": "u64"
+          },
+          {
+            "name": "redemption_rate",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoyaltyMint",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "store",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "points_per_sol",
+            "type": "u64"
+          },
+          {
+            "name": "redemption_rate",
+            "type": "u64"
+          },
+          {
+            "name": "total_points_issued",
+            "type": "u64"
+          },
+          {
+            "name": "total_points_redeemed",
+            "type": "u64"
+          },
+          {
+            "name": "is_token2022",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoyaltyPointsEarned",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "store_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "points_earned",
+            "type": "u64"
+          },
+          {
+            "name": "total_points",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoyaltyPointsRedeemed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "store_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "points_redeemed",
+            "type": "u64"
+          },
+          {
+            "name": "discount_value",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_points",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LoyaltyTokensMinted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "remaining_points",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformAdminAdded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin_pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "added_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlatformAdminRemoved",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin_pubkey",
+            "type": "pubkey"
+          },
+          {
+            "name": "removed_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProductAttribute",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Purchase",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "product_ids",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "quantities",
+            "type": {
+              "vec": "u64"
+            }
+          },
+          {
+            "name": "total_paid",
+            "type": "u64"
+          },
+          {
+            "name": "gas_fee",
+            "type": "u64"
+          },
+          {
+            "name": "store",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PurchaseCompleted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "store",
+            "type": "pubkey"
+          },
+          {
+            "name": "buyer",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "loyalty_points_earned",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Store",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "logo_uri",
+            "type": "string"
+          },
+          {
+            "name": "loyalty_config",
+            "type": {
+              "defined": {
+                "name": "LoyaltyConfig"
+              }
+            }
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "revenue",
+            "type": "u64"
+          },
+          {
+            "name": "admin_roles",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "AdminRole"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StoreRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "store_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StoreUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "store_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "updated_by",
+            "type": "pubkey"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserProfileUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet_address",
+            "type": "pubkey"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "updated_at",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

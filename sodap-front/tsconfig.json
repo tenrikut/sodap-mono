@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    // Target modern browsers; bundler (Vite/Jest) handles output
+    "target": "ESNext",
+    "module": "ESNext",
+
+    // Use Node module resolution so resolveJsonModule works
+    "moduleResolution": "node",
+
+    // Enable JSX in TSX files
+    "jsx": "react-jsx",
+
+    // Allow default imports from CJS modules
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    // Path alias @/ → src/
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"]
+    },
+
+    // Let TS import .json (and other assets via AllowJs)
+    "resolveJsonModule": true,
+    "allowJs": true,
+
+    // Don’t emit any output files
+    "noEmit": true,
+
+    // Loosen strictness a bit
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false
+  },
+
+  "include": [
+    "src/**/*",
+    "src/types/phantom.d.ts",
+    "src",
+    "src/types/global.d.ts"
+  ],
+
+  "exclude": ["node_modules", "dist"]
+}

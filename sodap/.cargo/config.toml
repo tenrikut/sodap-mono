@@ -1,0 +1,14 @@
+[build]
+# Increase the BPF stack size
+rustflags = [
+    "-C", "link-arg=-z",
+    "-C", "link-arg=stack-size=65536",
+    "-C", "link-arg=--stack-first",
+]
+
+[target.bpfel-unknown-unknown]
+rustflags = [
+    "-C", "link-arg=-z",
+    "-C", "link-arg=stack-size=65536",
+    "-C", "link-arg=--stack-first",
+] 

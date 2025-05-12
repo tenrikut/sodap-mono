@@ -1,0 +1,33 @@
+[package]
+name        = "sodap"
+version     = "0.1.0"
+edition     = "2021"
+description = "Created with Anchor"
+
+[lib]
+name        = "sodap"
+crate-type  = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+solana = []
+anchor-debug = []
+custom-panic = []
+custom-heap = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+
+[dependencies]
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl  = { version = "0.31.1", features = ["token", "token_2022"] }
+borsh = "0.10.3"
+solana-program = "=2.1.21"
