@@ -78,36 +78,10 @@ const PaymentContent: React.FC = () => {
   }, [navigate, walletAddress, cartItems, storeId]);
 
   useEffect(() => {
-    // Check if we're in development mode
-    const isDevelopmentMode = process.env.NODE_ENV === "development";
-
     // Set a timeout to check wallet connection status
     const timeoutId = setTimeout(() => {
       if (!walletAddress && !isProcessing) {
-        if (isDevelopmentMode) {
-          console.log("Development mode: Auto-connecting demo wallet");
-          connectWallet().then((success) => {
-            if (success) {
-              console.log("Demo wallet connected automatically");
-            } else {
-              toast.error(
-                "Failed to connect demo wallet. Will retry once more."
-              );
-              // Retry once after a short delay
-              setTimeout(() => {
-                connectWallet().then((retrySuccess) => {
-                  if (!retrySuccess) {
-                    toast.error(
-                      "Failed to connect wallet after retry. Please connect manually."
-                    );
-                  }
-                });
-              }, 1500);
-            }
-          });
-        } else {
-          toast.info("Please connect your wallet to proceed with payment");
-        }
+        toast.info("Please connect your wallet to proceed with payment");
       }
     }, 1500);
 

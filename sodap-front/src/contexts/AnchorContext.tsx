@@ -35,9 +35,9 @@ export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // If no environment variable is set, use Devnet by default
         if (!endpoint) {
-          // Always default to Devnet for consistency
+          // FORCE DEVNET: Always use Devnet regardless of environment
           endpoint = clusterApiUrl("devnet");
-          console.log("No network specified, defaulting to Solana Devnet");
+          console.log("FORCING CONNECTION TO SOLANA DEVNET");
         } else if (
           !/^https?:\/\//i.test(endpoint) &&
           endpoint !== "devnet" &&
@@ -97,6 +97,9 @@ export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
   ): Promise<void> => {
     try {
       console.log("Initializing Anchor program with address:", address);
+      console.log("Connection endpoint:", conn.rpcEndpoint);
+      console.log("Is connection to Devnet:", conn.rpcEndpoint.includes("devnet"));
+      
       const publicKey = new PublicKey(address);
       const wallet = createPhantomWalletAdapter(publicKey);
       const provider = createAnchorProvider(conn, wallet);
@@ -106,6 +109,7 @@ export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
         "Creating Anchor program with program ID:",
         PROGRAM_ID.toString()
       );
+      console.log("Using IDL:", JSON.stringify(IDL).substring(0, 100) + "...");
       const anchorProgram = createAnchorProgram(provider);
 
       if (!anchorProgram) {

@@ -70,12 +70,12 @@ const StoreSelection: React.FC = () => {
   const handleStoreSelect = (storeId: string) => {
     // Save the selected store ID to session storage
     sessionStorage.setItem("selectedStoreId", storeId);
-    
+
     toast({
       title: "Store Selected",
       description: `You've selected store #${storeId}`,
     });
-    
+
     // Navigate to the shop with the store ID
     navigate(`/shop?store=${storeId}`);
   };

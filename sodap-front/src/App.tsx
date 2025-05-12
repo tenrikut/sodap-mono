@@ -21,6 +21,7 @@ import Cart from "./pages/Cart";
 import Payment from "./pages/Payment";
 import Store from "./pages/Store";
 import StoreSelection from "./pages/StoreSelection";
+import StoreDetail from "./pages/StoreDetail";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/store" element={<Store />} />
+            <Route path="/store/:storeId" element={<StoreDetail />} />
 
             {/* Dashboard Routes - Role based */}
             <Route path="/dashboard" element={<Dashboard role="end_user" />} />

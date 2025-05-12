@@ -3,13 +3,29 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { PROGRAM_ID } from "@/utils/anchor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
-export const StorePDAManager: FC = () => {
+interface StorePDAManagerProps {
+  storeId: string;
+  storeName: string;
+  walletAddress?: string;
+  hasPda?: boolean;
+  onPdaCreated?: (storeId: string, pdaAddress: string) => void;
+}
+
+export const StorePDAManager: FC<StorePDAManagerProps> = ({
+  storeId,
+  storeName,
+  walletAddress,
+  hasPda = false,
+  onPdaCreated
+}) => {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
   const { toast } = useToast();
-  const [storePDA, setStorePDA] = useState<string | null>(null);
+  const [storePDA, setStorePDA] = useState<string | null>(hasPda ? "PDA exists" : null);
   const [loading, setLoading] = useState(false);
 
   const createStorePDA = async () => {
@@ -25,16 +41,26 @@ export const StorePDAManager: FC = () => {
     try {
       setLoading(true);
 
+      // Convert the storeId string to a PublicKey
+      const storePublicKey = new PublicKey(storeId);
+      
+      // Generate the PDA using the store ID and the program ID
       const [storePDA] = PublicKey.findProgramAddressSync(
-        [Buffer.from("store"), publicKey.toBuffer()],
-        // Replace with your program ID
-        new PublicKey("YOUR_PROGRAM_ID")
+        [Buffer.from("store"), storePublicKey.toBuffer()],
+        PROGRAM_ID // Use the actual program ID from our application
       );
 
-      setStorePDA(storePDA.toString());
+      const pdaAddress = storePDA.toString();
+      setStorePDA(pdaAddress);
+
+      // Call the callback to update the parent component
+      if (onPdaCreated) {
+        onPdaCreated(storeId, pdaAddress);
+      }
+      
       toast({
         title: "Store PDA Created",
-        description: "Your store PDA has been successfully created",
+        description: `PDA created for store: ${storeName}`,
       });
     } catch (err) {
       console.error("Error creating store PDA:", err);
@@ -49,26 +75,21 @@ export const StorePDAManager: FC = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Store PDA Management</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Button
-          onClick={createStorePDA}
-          disabled={loading || !publicKey}
-          className="w-full"
-        >
-          {loading ? "Creating..." : "Create Store PDA"}
-        </Button>
-
-        {storePDA && (
-          <div className="p-4 bg-muted rounded-lg">
-            <p className="font-semibold">Store PDA:</p>
-            <p className="break-all text-sm">{storePDA}</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <Button
+      onClick={createStorePDA}
+      disabled={loading || !publicKey || hasPda}
+      variant="outline"
+      size="sm"
+      className="flex items-center gap-1"
+    >
+      {loading ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+          Creating...
+        </>
+      ) : (
+        <>Create PDA</>
+      )}
+    </Button>
   );
 };

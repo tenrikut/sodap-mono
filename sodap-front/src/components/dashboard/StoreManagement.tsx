@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -7,32 +8,104 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Check, X, Plus, Edit, Trash2, Wallet } from 'lucide-react';
+import { Check, X, Plus, Edit, Trash2, Wallet, KeyRound, ExternalLink } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { StorePDAManager } from '@/components/admin/StorePDAManager';
+import { useToast } from '@/hooks/use-toast';
 
 // Define schema for form validation
 const storeFormSchema = z.object({
   storeName: z.string().min(2, { message: "Store name must be at least 2 characters." }),
-  managerPublicKey: z.string().min(32, { message: "Manager Public Key must be valid." }),
+  storeDescription: z.string().optional(), // Optional store description
+  managerName: z.string().optional(), // Optional manager name
+  managerPublicKey: z.string().optional(), // Make public key optional
 });
 
 type StoreFormValues = z.infer<typeof storeFormSchema>;
 
-// Mock store data
-const mockStores = [
-  { id: 'store1', name: 'Fashion Boutique', managerId: 'manager1', managerName: 'Emma Wilson', walletCreated: true },
-  { id: 'store2', name: 'Tech Gadgets', managerId: 'manager2', managerName: 'Michael Brown', walletCreated: false },
-  { id: 'store3', name: 'Home Decor', managerId: 'manager3', managerName: 'Sophie Taylor', walletCreated: true },
-  { id: 'store4', name: 'Sports Gear', managerId: 'manager4', managerName: 'James Miller', walletCreated: false },
+// Define the Store interface to include all properties
+interface Store {
+  id: string;
+  name: string;
+  description: string;
+  managerId: string;
+  managerName: string;
+  walletCreated: boolean;
+  walletAddress: string;
+  hasPda: boolean;
+  pdaAddress: string;
+}
+
+// Default mock store data with PDA status
+const defaultMockStores = [
+  { 
+    id: 'store1', 
+    name: 'Fashion Boutique', 
+    description: 'High-end fashion boutique with designer clothing and accessories.',
+    managerId: 'manager1', 
+    managerName: 'Emma Wilson', 
+    walletCreated: true,
+    walletAddress: '5ZAm7R4gV96ix6MLqyWsVBqRUKzDjtkMAu4JkUL5XJ8s',
+    hasPda: true,
+    pdaAddress: '8FE27ioQh5HaM1yQwZ2aQWmCkwM8PoVyH1VnKYdN7iVD'
+  },
+  { 
+    id: 'store2', 
+    name: 'Tech Gadgets', 
+    description: 'Latest technology gadgets and accessories for tech enthusiasts.',
+    managerId: 'manager2', 
+    managerName: 'Michael Brown', 
+    walletCreated: false,
+    walletAddress: '',
+    hasPda: false,
+    pdaAddress: ''
+  },
+  { 
+    id: 'store3', 
+    name: 'Home Decor', 
+    description: 'Beautiful home decoration items for every style and season.',
+    managerId: 'manager3', 
+    managerName: 'Sophie Taylor', 
+    walletCreated: true,
+    walletAddress: '9tK5nM4kUVZZGxGnAWzh88UURowwwJ7GLXiVKWD6MxsP',
+    hasPda: false,
+    pdaAddress: ''
+  },
+  { 
+    id: 'store4', 
+    name: 'Sports Gear', 
+    description: 'Sports equipment and clothing for athletes of all levels.',
+    managerId: 'manager4', 
+    managerName: 'James Miller', 
+    walletCreated: false,
+    walletAddress: '',
+    hasPda: false,
+    pdaAddress: ''
+  },
 ];
 
+// Helper function to get stores from session storage or use defaults
+const getInitialStores = (): Store[] => {
+  const storedStores = sessionStorage.getItem('sodap-stores');
+  if (storedStores) {
+    try {
+      return JSON.parse(storedStores);
+    } catch (error) {
+      console.error('Error parsing stored stores:', error);
+    }
+  }
+  return defaultMockStores;
+};
+
 const StoreManagement: React.FC = () => {
-  const [stores, setStores] = useState(mockStores);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [stores, setStores] = useState<Store[]>(getInitialStores());
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingStore, setEditingStore] = useState<typeof mockStores[0] | null>(null);
+  const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   const [storeToDelete, setStoreToDelete] = useState<string | null>(null);
 
@@ -40,30 +113,81 @@ const StoreManagement: React.FC = () => {
     resolver: zodResolver(storeFormSchema),
     defaultValues: {
       storeName: '',
+      storeDescription: '',
+      managerName: '',
       managerPublicKey: '',
     },
   });
+
+  // Save stores to session storage whenever they change
+  useEffect(() => {
+    sessionStorage.setItem('sodap-stores', JSON.stringify(stores));
+  }, [stores]);
 
   const onSubmit = (values: StoreFormValues) => {
     console.log('Store form submitted:', values);
     
     if (editingStore) {
       // Edit existing store
-      setStores(stores.map(store => 
+      const updatedStores = stores.map(store => 
         store.id === editingStore.id 
-          ? { ...store, name: values.storeName, managerId: values.managerPublicKey } 
+          ? { 
+              ...store, 
+              name: values.storeName,
+              description: values.storeDescription || store.description || '', 
+              managerName: values.managerName || store.managerName,
+              managerId: values.managerPublicKey || '' // Handle case where public key is not provided
+            } 
           : store
-      ));
+      );
+      setStores(updatedStores);
+      
+      // Update session storage
+      sessionStorage.setItem('sodap-stores', JSON.stringify(updatedStores));
+
+      toast({
+        title: "Store Updated",
+        description: `Store "${values.storeName}" has been updated successfully.`,
+      });
     } else {
-      // Add new store
-      const newStore = {
-        id: `store${stores.length + 1}`,
-        name: values.storeName,
-        managerId: values.managerPublicKey,
-        managerName: `Manager for ${values.storeName}`, // In a real app, this would come from the manager data
-        walletCreated: false,
+      // Generate a unique store ID that's not already in use
+      const generateStoreId = () => {
+        const baseId = 'store';
+        let counter = stores.length + 1;
+        let newId = `${baseId}${counter}`;
+        
+        // Check if ID already exists and increment until unique
+        while (stores.some(store => store.id === newId)) {
+          counter++;
+          newId = `${baseId}${counter}`;
+        }
+        
+        return newId;
       };
-      setStores([...stores, newStore]);
+
+      // Add new store with all required fields from the Store interface
+      const newStore: Store = {
+        id: generateStoreId(),
+        name: values.storeName,
+        description: values.storeDescription || '', // Add description with fallback
+        managerId: values.managerPublicKey || '', // Handle empty public key case
+        managerName: values.managerName || `Manager for ${values.storeName}`, // Use entered name or fallback
+        walletCreated: false,
+        walletAddress: '',
+        hasPda: false,
+        pdaAddress: ''
+      };
+      
+      const updatedStores = [...stores, newStore];
+      setStores(updatedStores);
+      
+      // Update session storage
+      sessionStorage.setItem('sodap-stores', JSON.stringify(updatedStores));
+
+      toast({
+        title: "Store Created",
+        description: `Store "${values.storeName}" has been created successfully.`,
+      });
     }
     
     form.reset();
@@ -71,10 +195,12 @@ const StoreManagement: React.FC = () => {
     setEditingStore(null);
   };
 
-  const handleEditStore = (store: typeof mockStores[0]) => {
+  const handleEditStore = (store: Store) => {
     setEditingStore(store);
     form.reset({
       storeName: store.name,
+      storeDescription: store.description || '',
+      managerName: store.managerName || '',
       managerPublicKey: store.managerId,
     });
     setDialogOpen(true);
@@ -87,7 +213,19 @@ const StoreManagement: React.FC = () => {
 
   const confirmDeleteStore = () => {
     if (storeToDelete) {
-      setStores(stores.filter(store => store.id !== storeToDelete));
+      const storeName = stores.find(s => s.id === storeToDelete)?.name || 'Unknown';
+      const filteredStores = stores.filter(store => store.id !== storeToDelete);
+      
+      // Update state
+      setStores(filteredStores);
+      
+      // Update session storage
+      sessionStorage.setItem('sodap-stores', JSON.stringify(filteredStores));
+      
+      toast({
+        title: "Store Deleted",
+        description: `Store "${storeName}" has been deleted.`,
+      });
     }
     setAlertDialogOpen(false);
     setStoreToDelete(null);
@@ -96,9 +234,59 @@ const StoreManagement: React.FC = () => {
   const handleCreateWallet = (storeId: string) => {
     console.log('Creating wallet for store ID:', storeId);
     // Mock creating a wallet - in real app would call an API
-    setStores(stores.map(store => 
-      store.id === storeId ? { ...store, walletCreated: true } : store
-    ));
+    const updatedStores = stores.map(store => 
+      store.id === storeId ? { 
+        ...store, 
+        walletCreated: true,
+        walletAddress: generateMockWalletAddress() 
+      } : store
+    );
+    
+    // Update state
+    setStores(updatedStores);
+    
+    // Update session storage
+    sessionStorage.setItem('sodap-stores', JSON.stringify(updatedStores));
+    
+    const storeName = stores.find(s => s.id === storeId)?.name || 'Unknown';
+    toast({
+      title: "Wallet Created",
+      description: `Wallet for store "${storeName}" has been created.`,
+    });
+  };
+
+  // Helper to generate a mock Solana wallet address
+  const generateMockWalletAddress = () => {
+    const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    let result = '';
+    for (let i = 0; i < 44; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  // Handle PDA creation
+  const handlePdaCreated = (storeId: string, pdaAddress: string) => {
+    console.log('PDA created for store ID:', storeId, 'Address:', pdaAddress);
+    const updatedStores = stores.map(store => 
+      store.id === storeId ? { 
+        ...store, 
+        hasPda: true,
+        pdaAddress: pdaAddress 
+      } : store
+    );
+    
+    // Update state
+    setStores(updatedStores);
+    
+    // Update session storage
+    sessionStorage.setItem('sodap-stores', JSON.stringify(updatedStores));
+    
+    const storeName = stores.find(s => s.id === storeId)?.name || 'Unknown';
+    toast({
+      title: "PDA Created",
+      description: `PDA for store "${storeName}" has been created.`,
+    });
   };
 
   return (
@@ -148,16 +336,53 @@ const StoreManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="storeDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Store Description <span className="text-gray-500 text-sm">(optional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter store description" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="managerName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Store Manager Name <span className="text-gray-500 text-sm">(optional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter store manager name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="managerPublicKey"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Manager Public Key</FormLabel>
+                        <FormLabel>
+                          Manager Public Key <span className="text-gray-500 text-sm">(optional)</span>
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter manager public key" {...field} />
+                          <Input placeholder="Enter manager's public key or leave empty" {...field} />
                         </FormControl>
                         <FormMessage />
+                        <p className="text-sm text-gray-500 mt-1">
+                          You can create a wallet later using the Manage Keys button
+                        </p>
                       </FormItem>
                     )}
                   />
@@ -179,6 +404,7 @@ const StoreManagement: React.FC = () => {
                 <TableHead>Store ID</TableHead>
                 <TableHead>Store Manager</TableHead>
                 <TableHead className="text-center">Wallet Created</TableHead>
+                <TableHead className="text-center">PDA Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -200,19 +426,47 @@ const StoreManagement: React.FC = () => {
                         No
                       </span>
                     )}
+                    {store.walletAddress && (
+                      <div className="mt-1">
+                        <span className="text-xs text-gray-500 break-all">
+                          {store.walletAddress.substring(0, 8)}...{store.walletAddress.substring(store.walletAddress.length - 8)}
+                        </span>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {store.hasPda ? (
+                      <span className="inline-flex items-center text-green-600">
+                        <Check className="h-4 w-4 mr-1" />
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center text-red-600">
+                        <X className="h-4 w-4 mr-1" />
+                        No
+                      </span>
+                    )}
+                    {store.pdaAddress && (
+                      <div className="mt-1">
+                        <span className="text-xs text-gray-500 break-all">
+                          {store.pdaAddress.substring(0, 8)}...{store.pdaAddress.substring(store.pdaAddress.length - 8)}
+                        </span>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      {!store.walletCreated && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleCreateWallet(store.id)}
-                        >
-                          <Wallet className="h-4 w-4 mr-1" />
-                          Create Wallet
-                        </Button>
-                      )}
+                      {/* Manage Keys button */}
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="bg-sodap-purple hover:bg-purple-700"
+                        onClick={() => navigate(`/store/${store.id}`)}
+                      >
+                        <KeyRound className="h-4 w-4 mr-1" />
+                        Manage Keys
+                      </Button>
+                      {/* Edit button */}
                       <Button 
                         variant="outline" 
                         size="sm"
@@ -221,6 +475,7 @@ const StoreManagement: React.FC = () => {
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
+                      {/* Delete button */}
                       <Button 
                         variant="destructive" 
                         size="sm"
