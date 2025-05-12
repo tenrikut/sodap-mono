@@ -12,7 +12,7 @@ import {
 import { PaymentDetailsCard } from "@/components/payment/PaymentDetailsCard";
 import { PaymentSuccessDialog } from "@/components/payment/PaymentSuccessDialog";
 import { useCart } from "@/hooks/useCart";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 // Content component that uses the profile context
 const PaymentContent: React.FC = () => {
@@ -189,10 +189,7 @@ const PaymentContent: React.FC = () => {
       setIsProcessing(true);
       console.log("Starting payment process with wallet:", walletAddress);
 
-      // Check if we're in development mode
-      const isDevelopmentMode = process.env.NODE_ENV === "development";
-
-      // Create and send a real Solana transaction
+      // Always use real Solana transactions
       const subtotal = parseFloat(cartTotal);
 
       if (!connection) {
@@ -200,114 +197,77 @@ const PaymentContent: React.FC = () => {
         setIsProcessing(false);
         return;
       }
-
-      // In development mode, we can simulate a successful payment
-      if (isDevelopmentMode) {
-        console.log("Development mode: Simulating payment");
-
-        // Wait a bit to simulate processing
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        // For Sodap Watch Store (ID: 5), ensure we always have the correct wallet address
-        const selectedStoreId = sessionStorage.getItem("selectedStoreId");
-        let receiverWalletAddress = storeWalletAddress;
-
-        if (selectedStoreId === "5" && !storeWalletAddress) {
-          // Use hardcoded address for Sodap Watch Store if missing
-          receiverWalletAddress = "Gx58a8WY4FMEgvkVzMjFC8baKvnACqy1MiJxjdoLLLx8";
-          setStoreWalletAddress(receiverWalletAddress);
-          console.log("Using hardcoded wallet address for Sodap Watch Store");
-        }
-
-        // Check if we have a store wallet address
-        if (!receiverWalletAddress) {
-          toast.error("Store wallet address not found! The store may not have a wallet configured.");
-          return;
-        }
-        
-        // Mock a working Anchor connection
-        const mockAnchorResponse = {
-          success: true,
-          transactionId: "simulated_anchor_tx_" + Math.random().toString(36).substring(2),
-        };
-
-        // Log payment details
-        console.log(`Processing payment of ${cartTotal} SOL from ${walletAddress || userWallet} to store wallet ${receiverWalletAddress}`);
-        console.log(`Using Anchor program: ${mockAnchorResponse.success ? "Success" : "Failed"}`);
-        
-        // Simulate sending transaction to blockchain
-        const tx = {
-          blockTime: new Date().getTime(),
-          signature: mockAnchorResponse.transactionId,
-          sender: walletAddress || userWallet,
-          receiver: receiverWalletAddress,
-          amount: parseFloat(cartTotal),
-        };
-
-        // Generate a fake transaction signature
-        const fakeSignature =
-          "SIM" + Math.random().toString(36).substring(2, 15);
-        setTransactionSignature(fakeSignature);
-
-        // Clear the cart
-        localStorage.setItem("cart", JSON.stringify([]));
-        window.dispatchEvent(new Event("cartUpdated"));
-
-        // Set points and show success dialog
-        const pointsEarned = Math.round(parseFloat(cartTotal));
-        setEarnedPoints(pointsEarned);
-
-        toast.success("Payment simulation successful!");
-        setShowSuccessDialog(true);
+      
+      // For Sodap Watch Store (ID: 5), ensure we always have the correct wallet address
+      const selectedStoreId = sessionStorage.getItem("selectedStoreId");
+      if (selectedStoreId === "5" && !storeWalletAddress) {
+        // Use our updated wallet address for Sodap Watch Store if missing
+        const watchStoreWallet = "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J";
+        setStoreWalletAddress(watchStoreWallet);
+        console.log("Using specific wallet address for Sodap Watch Store:", watchStoreWallet);
+      }
+      
+      // Check if we have a store wallet address
+      if (!storeWalletAddress) {
+        toast.error("Store wallet address not found! The store may not have a wallet configured.");
         setIsProcessing(false);
         return;
       }
-
-      // For production mode, continue with real transaction
-
-      // Convert the wallet address string to a PublicKey
-      let walletPublicKey;
+      
+      // DIRECT APPROACH: Create a simple transaction
       try {
-        // For real wallets, use the actual public key
-        walletPublicKey = new PublicKey(walletAddress);
-      } catch (error) {
-        console.error("Invalid wallet address format:", error);
-        toast.error(
-          "Invalid wallet address format. Please reconnect your wallet."
-        );
-        setIsProcessing(false);
-        return;
-      }
-
-      console.log("Using connection to:", connection.rpcEndpoint);
-      if (program) {
-        console.log("Using program ID:", program.programId.toString());
-      } else {
-        console.error("Program not initialized");
-        toast.error("Solana program not initialized. Please try again.");
-        setIsProcessing(false);
-        return;
-      }
-
-      try {
-        console.log(`Creating purchase transaction for store: ${storeId}`);
-        console.log(`Total amount: ${subtotal} SOL`);
-        console.log(`Using wallet: ${walletPublicKey.toString()}`);
+        // Convert the wallet and store addresses to PublicKeys
+        const fromWalletPublicKey = new PublicKey(walletAddress || userWallet);
+        const toStorePublicKey = new PublicKey(storeWalletAddress);
         
-        const transaction = await createPurchaseTransaction(
-          cartItems,
-          subtotal,
-          storeId,
-          connection,
-          program,
-          walletPublicKey
+        console.log("Creating direct SOL transfer transaction");
+        console.log(`Amount: ${subtotal} SOL`);
+        console.log(`From: ${fromWalletPublicKey.toString()}`);
+        console.log(`To: ${toStorePublicKey.toString()}`);
+        
+        // Calculate amount in lamports (1 SOL = 1,000,000,000 lamports)
+        const lamports = Math.round(subtotal * LAMPORTS_PER_SOL);
+        console.log(`Amount in lamports: ${lamports}`);
+        
+        // Create a simple transfer transaction
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: fromWalletPublicKey,
+            toPubkey: toStorePublicKey,
+            lamports: lamports,
+          })
         );
-
-        // Send the transaction to Devnet
-        toast.info("Sending transaction to Solana Devnet...");
-        const signature = await sendTransaction(transaction, connection);
+        
+        // Get a recent blockhash
+        const { blockhash } = await connection.getLatestBlockhash('confirmed');
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = fromWalletPublicKey;
+        
+        // Send transaction using Phantom wallet
+        if (!window.phantom?.solana) {
+          throw new Error("Phantom wallet not detected");
+        }
+        
+        toast.info("Please approve the transaction in your wallet");
+        
+        // Request signature from the user
+        const signedTransaction = await window.phantom.solana.signTransaction(transaction);
+        
+        // Send the transaction to the network
+        toast.info("Sending transaction to Solana network...");
+        const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+        
+        // Wait for confirmation
+        toast.info("Waiting for transaction confirmation...");
+        const confirmation = await connection.confirmTransaction(signature, 'confirmed');
+        
+        if (confirmation.value.err) {
+          throw new Error(`Transaction failed: ${confirmation.value.err}`);
+        }
+        
+        // Set the transaction signature for display
         setTransactionSignature(signature);
-
+        
         // Show success message with explorer link
         const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
         toast.success(
@@ -351,7 +311,7 @@ const PaymentContent: React.FC = () => {
             toast.error(
               <div>
                 {errorMessage}<br/>
-                <a href="https://faucet.solana.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-500">
+                <a href="https://solfaucet.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-500 mt-2 inline-block">
                   Get free Devnet SOL
                 </a>
               </div>,
