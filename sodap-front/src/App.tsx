@@ -5,8 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Providers } from "./providers";
+import { SodapAnchorProvider } from "./contexts/AnchorContext";
+import { SolanaProvider } from "./components/providers/SolanaProvider";
 import WalletTestPage from "./pages/WalletTestPage";
-import Debug from "./pages/Debug";
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -39,7 +40,6 @@ const App = () => (
 
             {/* Wallet Test Route */}
             <Route path="/wallet-test" element={<WalletTestPage />} />
-            <Route path="/debug" element={<Debug />} />
 
             {/* User Routes */}
             <Route path="/profile" element={<Profile />} />

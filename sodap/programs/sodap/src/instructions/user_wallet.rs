@@ -6,7 +6,7 @@ pub fn create_user_wallet(ctx: Context<CreateUserWallet>) -> Result<()> {
     let authority = &ctx.accounts.authority;
 
     user_profile.authority = authority.key();
-    user_profile.user_id = String::new();
+    user_profile.user_id = authority.key().to_string();
     user_profile.delivery_address = String::new();
     user_profile.preferred_store = Pubkey::default();
     user_profile.total_purchases = 0;

@@ -7,7 +7,6 @@ import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  CoinbaseWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { getSolanaConfig } from "@/lib/solana";
@@ -27,10 +26,10 @@ export const SolanaProvider: FC<SolanaProviderProps> = ({ children }) => {
     () => [
       new PhantomWalletAdapter({ network }),
       new SolflareWalletAdapter({ network }),
-      new CoinbaseWalletAdapter(),
     ],
     [network]
   );
+
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>

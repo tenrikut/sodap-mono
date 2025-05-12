@@ -3,38 +3,36 @@ import {
   PublicKey,
   Transaction,
   SystemProgram,
-  Keypair,
 } from "@solana/web3.js";
-import { Program, AnchorProvider, Wallet } from "@coral-xyz/anchor";
+import { Program } from "@project-serum/anchor";
 import { toast } from "sonner";
-import type { Sodap } from "@/idl/sodap";
+import { IDL } from "../idl";
 
 /**
  * Test transaction to initialize the program
  * This is a simple call to the program's initialize instruction
  */
 export const testInitializeTransaction = async (
-  program: Program<Sodap>,
-  walletPublicKey: PublicKey
+  program: Program,
+  wallet: PublicKey
 ): Promise<string> => {
   try {
     console.log("Creating initialize transaction...");
     console.log("Using program ID:", program.programId.toString());
-    console.log("With wallet:", walletPublicKey.toString());
+    console.log("With wallet:", wallet.toString());
 
     // Create the transaction
     const tx = await program.methods
       .initialize()
       .accounts({
-        payer: walletPublicKey,
-        // other accounts you need to specify
-        // No need to specify systemProgram explicitly as Anchor adds it automatically
+        payer: wallet,
+        systemProgram: SystemProgram.programId,
       })
       .rpc();
 
     console.log("Transaction sent successfully!");
     return tx;
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Error creating initialize transaction:", error);
     throw error;
   }
@@ -45,8 +43,8 @@ export const testInitializeTransaction = async (
  * This calls the createOrUpdateUserProfile instruction
  */
 export const testCreateUserProfile = async (
-  program: Program<Sodap>,
-  walletPublicKey: PublicKey,
+  program: Program,
+  wallet: PublicKey,
   name: string,
   email: string
 ): Promise<string> => {
@@ -62,14 +60,14 @@ export const testCreateUserProfile = async (
         null // phone (optional)
       )
       .accounts({
-        payer: walletPublicKey,
-        // Don't specify systemProgram manually as it's already defined in your IDL
+        payer: wallet,
+        systemProgram: SystemProgram.programId,
       })
       .rpc();
 
     console.log("User profile created successfully!");
     return tx;
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Error creating user profile:", error);
     throw error;
   }

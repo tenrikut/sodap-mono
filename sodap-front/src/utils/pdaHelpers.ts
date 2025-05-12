@@ -1,6 +1,10 @@
 import { PublicKey } from "@solana/web3.js";
 import { Buffer } from "buffer";
-import { PROGRAM_ID } from "./anchor";
+
+// Use the program ID from your Anchor setup
+export const PROGRAM_ID = new PublicKey(
+  "4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv"
+);
 
 /**
  * Convert a string UUID to Uint8Array for use in PDAs
@@ -54,48 +58,6 @@ export function findReceiptPDA(
 export function findLoyaltyMintPDA(storePubkey: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [Buffer.from("loyalty_mint"), storePubkey.toBuffer()],
-    PROGRAM_ID
-  );
-  return pda;
-}
-
-/**
- * Find the Watch Purchase PDA for a purchase of a watch
- * Specialized PDA for the Sodap Watch Store (store ID 5)
- */
-export function findWatchPurchasePDA(
-  storePubkey: PublicKey,
-  buyerPubkey: PublicKey,
-  watchId: string
-): PublicKey {
-  const [pda] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("watch_purchase"),
-      storePubkey.toBuffer(),
-      buyerPubkey.toBuffer(),
-      Buffer.from(watchId),
-    ],
-    PROGRAM_ID
-  );
-  return pda;
-}
-
-/**
- * Find the Watch Warranty PDA for a purchased watch
- * Creates a warranty record for watches from Sodap Watch Store
- */
-export function findWatchWarrantyPDA(
-  storePubkey: PublicKey,
-  buyerPubkey: PublicKey,
-  watchId: string
-): PublicKey {
-  const [pda] = PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("watch_warranty"),
-      storePubkey.toBuffer(),
-      buyerPubkey.toBuffer(),
-      Buffer.from(watchId),
-    ],
     PROGRAM_ID
   );
   return pda;

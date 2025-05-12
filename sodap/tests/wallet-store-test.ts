@@ -88,15 +88,14 @@ describe("User Wallet and Store Tests", () => {
         "https://example.com/logo.png",
         {
           pointsPerDollar: new BN(10),
-          minimumPurchase: new BN(100),
-          rewardPercentage: new BN(5),
-          isActive: true,
+          redemptionRate: new BN(5),
         }
       )
       .accounts({
         store: storePDA,
         escrow: escrowPDA,
         authority: user.publicKey,
+        payer: user.publicKey,
         systemProgram: SystemProgram.programId,
       })
       .signers([user])

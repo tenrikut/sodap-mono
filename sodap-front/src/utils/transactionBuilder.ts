@@ -48,92 +48,91 @@ const SOLANA_NETWORK =
 /**
  * Create a purchase transaction for the cart
  * Using AnchorContext's connection and program instead of creating new ones
- *
- * Testing this on Solana devnet:
- * 1. Make sure your wallet has SOL on devnet (use https://solfaucet.com/)
- * 2. Connect your Phantom wallet to devnet network in settings
- * 3. The Store PDA should be properly initialized before making purchases
- * 4. For first-time users, the receipt PDA will be created during the transaction
  */
 export const createPurchaseTransaction = async (
   cartItems: CartItem[],
   total: number,
   storeId: string,
   connection: Connection,
-  program: Program<Sodap>,
+  program: Program,
   walletPublicKey: PublicKey
 ): Promise<Transaction> => {
   // Create a new transaction
   const transaction = new Transaction();
 
+  // Check if we're in development mode
+  const isDevelopmentMode = process.env.NODE_ENV === "development";
+
   try {
-    console.log(
-      "Creating Solana payment transaction with program:",
-      program.programId.toString()
-    );
+    // Validate inputs
+    if (!connection) throw new Error("Connection not established");
+    if (!program) throw new Error("Program not initialized");
+    if (!walletPublicKey) throw new Error("Wallet public key not provided");
+    if (!storeId) throw new Error("Store ID not provided");
 
-    console.log("Cart items:", JSON.stringify(cartItems));
-    console.log("Total amount:", total, "SOL");
-    console.log("Store ID:", storeId);
+    // In development mode, create a simulated transaction
+    if (isDevelopmentMode) {
+      console.log("Creating simulated transaction for development mode");
 
-    // Convert store ID to PublicKey
-    const storePublicKey = new PublicKey(storeId);
-
-    try {
-      // Convert amount to lamports
-      const amountLamports = new BN(solToLamports(total));
-
-      // Find store account PDA for the store owner
-      const storePDA = findStorePDA(storePublicKey);
-
-      // Get escrow account PDA for this store
-      const escrowAccount = findEscrowPDA(storePDA);
-
-      // Find the receipt PDA for this purchase
-      const receipt = findReceiptPDA(storePDA, walletPublicKey);
-
-      // Find the loyalty mint PDA for this store
-      const loyaltyMintInfo = findLoyaltyMintPDA(storePDA);
-
-      console.log("Store PDA:", storePDA.toString());
-      console.log("Escrow PDA:", escrowAccount.toString());
-      console.log("Receipt PDA:", receipt.toString());
-      console.log("Loyalty Mint PDA:", loyaltyMintInfo.toString());
-
-      // Extract product IDs and quantities from cart items
-      const productIds = cartItems.map(
-        (item) => new PublicKey(item.product.id)
-      );
-      const quantities = cartItems.map((item) => new BN(item.quantity));
-
-      // Add purchase instruction to the transaction
+      // Add a simple transfer instruction as a placeholder
       transaction.add(
-        program.instruction.purchaseCart(
-          productIds,
-          quantities,
-          amountLamports,
-          {
-            accounts: {
-              buyer: walletPublicKey,
-              store: storePDA,
-              receipt: receipt,
-              storeOwner: storePublicKey,
-              escrowAccount: escrowAccount,
-              systemProgram: SystemProgram.programId,
-              // Optional accounts below - can be included conditionally if needed
-              loyaltyMintInfo: loyaltyMintInfo,
-              tokenMint: null,
-              tokenAccount: null,
-              mintAuthority: null,
-              tokenProgram: null,
-            },
-          }
-        )
+        SystemProgram.transfer({
+          fromPubkey: walletPublicKey,
+          toPubkey: new PublicKey("11111111111111111111111111111111"), // Dummy recipient
+          lamports: 1, // Minimal amount for simulation
+        })
       );
 
       // Add recent blockhash
       transaction.recentBlockhash = (
-        await connection.getLatestBlockhash("confirmed")
+        await connection.getLatestBlockhash()
+      ).blockhash;
+      transaction.feePayer = walletPublicKey;
+
+      return transaction;
+    }
+
+    // For production mode, create a real transaction
+    console.log(
+      "Creating transaction with program:",
+      program.programId.toString()
+    );
+
+    // Convert store ID to PublicKey
+    const storePublicKey = new PublicKey(storeId);
+    console.log("Using store ID:", storePublicKey.toString());
+
+    try {
+      // Convert amount to lamports
+      const amountLamports = new BN(total * LAMPORTS_PER_SOL);
+      console.log("Payment amount (lamports):", amountLamports.toString());
+
+      // Verify program methods exist
+      if (!program.instruction || !program.instruction.purchaseCart) {
+        throw new Error("Program does not have the purchaseCart instruction");
+      }
+
+      // Log the instruction we're about to create
+      console.log("Creating purchaseCart instruction with:", {
+        buyer: walletPublicKey.toString(),
+        store: storePublicKey.toString(),
+        amount: amountLamports.toString(),
+      });
+
+      // Add purchase instruction to transaction
+      transaction.add(
+        program.instruction.purchaseCart(amountLamports, {
+          accounts: {
+            buyer: walletPublicKey,
+            store: storePublicKey,
+            systemProgram: SystemProgram.programId,
+          },
+        }) as TransactionInstruction
+      );
+
+      // Add recent blockhash
+      transaction.recentBlockhash = (
+        await connection.getLatestBlockhash()
       ).blockhash;
       transaction.feePayer = walletPublicKey;
 
@@ -160,10 +159,23 @@ export const sendTransaction = async (
   connection: Connection
 ): Promise<string> => {
   try {
-    // Always use real transactions on devnet, regardless of development mode
-    console.log("Sending transaction to Solana network");
+    // Check if we're in development mode
+    const isDevelopmentMode = process.env.NODE_ENV === "development";
 
-    // Get the wallet from window.phantom?.solana
+    if (isDevelopmentMode) {
+      console.log("Development mode: Simulating transaction send");
+
+      // Generate a fake transaction signature for development mode
+      const fakeSignature = "SIM" + Math.random().toString(36).substring(2, 15);
+
+      // Simulate a delay to mimic network latency
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      console.log("Simulated transaction sent with signature:", fakeSignature);
+      return fakeSignature;
+    }
+
+    // For production mode, get the wallet from window.phantom.solana
     const wallet = window.phantom?.solana;
     if (!wallet) {
       throw new Error("Phantom wallet not connected");
@@ -174,36 +186,18 @@ export const sendTransaction = async (
     const signedTransaction = await wallet.signTransaction(transaction);
 
     // Send the signed transaction
-    console.log("Sending transaction to the network");
+    console.log("Sending transaction to network");
     const signature = await connection.sendRawTransaction(
-      signedTransaction.serialize(),
-      { skipPreflight: false, preflightCommitment: "confirmed" }
+      signedTransaction.serialize()
     );
 
     console.log("Transaction sent, signature:", signature);
-    toast.info("Transaction sent to the Solana network");
 
-    // Confirm the transaction with confirmed commitment
+    // Confirm the transaction
     console.log("Waiting for confirmation");
-    toast.info("Waiting for transaction confirmation...");
-    const latestBlockhash = await connection.getLatestBlockhash("confirmed");
-    const confirmation = await connection.confirmTransaction(
-      {
-        signature,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      },
-      "confirmed"
-    );
-
-    if (confirmation.value.err) {
-      throw new Error(
-        `Transaction failed: ${JSON.stringify(confirmation.value.err)}`
-      );
-    }
+    await connection.confirmTransaction(signature, "confirmed");
 
     console.log("Transaction confirmed");
-    toast.success("Transaction confirmed successfully!");
     return signature;
   } catch (error) {
     console.error("Error sending transaction:", error);

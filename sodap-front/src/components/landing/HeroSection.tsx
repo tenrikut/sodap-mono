@@ -33,9 +33,9 @@ const HeroSection: React.FC = () => {
           
           <div className="md:w-1/2">
             <div className="relative">
-              <div className="absolute -left-6 -top-6 w-64 h-64 bg-sodap-purple/10 rounded-full"></div>
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-sodap-blue/10 rounded-full"></div>
-              <div className="relative z-10 w-full h-80 bg-gradient-sodap rounded-xl shadow-xl"></div>
+              <div className="absolute -left-6 -top-6 w-64 h-64 bg-purple-100 rounded-full"></div>
+              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-100 rounded-full"></div>
+              <div className="relative z-10 w-full h-80 bg-gradient-to-r from-sodap-purple to-sodap-blue rounded-xl shadow-xl"></div>
             </div>
           </div>
         </div>

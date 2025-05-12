@@ -1,31 +1,25 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Layout from "@/components/layout/Layout";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Layout from '@/components/layout/Layout';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Mock store data - would be replaced with API call
 const mockStores = [
-  { id: "1", name: "SoDap Official Store", location: "San Francisco, CA" },
-  { id: "2", name: "Digital Collectibles", location: "New York, NY" },
-  { id: "3", name: "Crypto Merchandise", location: "Miami, FL" },
-  { id: "4", name: "Blockchain Apparel", location: "Austin, TX" },
-  { id: "5", name: "Sodap Watch Store", location: "Seattle, WA" },
+  { id: '1', name: 'SoDap Official Store', location: 'San Francisco, CA' },
+  { id: '2', name: 'Digital Collectibles', location: 'New York, NY' },
+  { id: '3', name: 'Crypto Merchandise', location: 'Miami, FL' },
+  { id: '4', name: 'Blockchain Apparel', location: 'Austin, TX' },
 ];
 
 const StoreSelection: React.FC = () => {
-  const [searchType, setSearchType] = useState<"id" | "name">("name");
-  const [searchValue, setSearchValue] = useState("");
+  const [searchType, setSearchType] = useState<'id' | 'name'>('name');
+  const [searchValue, setSearchValue] = useState('');
   const [filteredStores, setFilteredStores] = useState(mockStores);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -42,13 +36,13 @@ const StoreSelection: React.FC = () => {
     // Simulate API call
     setTimeout(() => {
       let results;
-
-      if (searchType === "id") {
-        results = mockStores.filter((store) =>
+      
+      if (searchType === 'id') {
+        results = mockStores.filter(store => 
           store.id.toLowerCase().includes(searchValue.toLowerCase())
         );
       } else {
-        results = mockStores.filter((store) =>
+        results = mockStores.filter(store => 
           store.name.toLowerCase().includes(searchValue.toLowerCase())
         );
       }
@@ -80,18 +74,14 @@ const StoreSelection: React.FC = () => {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">
-              Select a Store
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Select a Store</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="w-full md:w-1/4">
-                <Select
-                  value={searchType}
-                  onValueChange={(value) =>
-                    setSearchType(value as "id" | "name")
-                  }
+                <Select 
+                  value={searchType} 
+                  onValueChange={(value) => setSearchType(value as 'id' | 'name')}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Search by" />
@@ -102,22 +92,18 @@ const StoreSelection: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-
+              
               <div className="flex-1 flex gap-2">
                 <Input
-                  placeholder={
-                    searchType === "id"
-                      ? "Enter store ID..."
-                      : "Enter store name..."
-                  }
+                  placeholder={searchType === 'id' ? "Enter store ID..." : "Enter store name..."}
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   className="flex-1"
                 />
-                <Button
-                  onClick={handleSearch}
-                  variant="outline"
+                <Button 
+                  onClick={handleSearch} 
+                  variant="outline" 
                   className="border-sodap-purple text-sodap-purple hover:bg-sodap-purple/5"
                   disabled={isLoading}
                 >
@@ -128,13 +114,13 @@ const StoreSelection: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-
+        
         <h2 className="text-xl font-semibold mb-4">Available Stores</h2>
-
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredStores.map((store) => (
-            <Card
-              key={store.id}
+          {filteredStores.map(store => (
+            <Card 
+              key={store.id} 
               className="cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => handleStoreSelect(store.id)}
             >
@@ -145,9 +131,9 @@ const StoreSelection: React.FC = () => {
                     <p className="text-sm text-gray-600">ID: {store.id}</p>
                     <p className="text-sm text-gray-600">{store.location}</p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
                     className="border-sodap-purple text-sodap-purple hover:bg-sodap-purple/5"
                   >
                     Select

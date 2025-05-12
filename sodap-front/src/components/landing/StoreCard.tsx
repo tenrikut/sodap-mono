@@ -33,15 +33,15 @@ const StoreCard: React.FC<StoreCardProps> = ({
       </AspectRatio>
       <CardContent className="pt-6">
         <div className="flex items-center mb-2">
-          <div className={`w-8 h-8 ${iconColor} rounded-full flex items-center justify-center mr-3`}>
-            <Store className={iconColor.replace('bg-', 'text-').replace('/10', '')} size={16} />
+          <div className={`w-8 h-8 ${iconColor || 'bg-purple-100'} rounded-full flex items-center justify-center mr-3`}>
+            <Store className="text-purple-500" size={16} />
           </div>
           <h3 className="text-xl font-semibold">{name}</h3>
         </div>
         <p className="text-gray-600">{description}</p>
       </CardContent>
       <CardFooter className="border-t pt-4">
-        <Link to={`/store?id=${id}`} className={`${linkColor} hover:underline font-medium flex items-center`}>
+        <Link to={`/store?id=${id}`} className="text-purple-500 hover:underline font-medium flex items-center">
           Visit Store <ArrowRight size={16} className="ml-2" />
         </Link>
       </CardFooter>

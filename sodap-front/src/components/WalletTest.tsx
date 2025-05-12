@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { useAnchor } from "@/hooks/useAnchor";
-import { Program } from "@coral-xyz/anchor";
-import type { Sodap } from "@/idl/sodap";
+import { useAnchor } from "../contexts/AnchorContext";
 import {
   testInitializeTransaction,
   testCreateUserProfile,
@@ -75,10 +73,7 @@ const WalletTest: React.FC = () => {
     setIsLoading(true);
     try {
       const publicKey = new PublicKey(walletAddress);
-      const signature = await testInitializeTransaction(
-        program as Program<Sodap>,
-        publicKey
-      );
+      const signature = await testInitializeTransaction(program, publicKey);
       setTransactionSignature(signature);
       setTestResult(`Initialize transaction successful!`);
     } catch (error) {
@@ -103,7 +98,7 @@ const WalletTest: React.FC = () => {
     try {
       const publicKey = new PublicKey(walletAddress);
       const signature = await testCreateUserProfile(
-        program as Program<Sodap>,
+        program,
         publicKey,
         userName,
         userEmail
@@ -235,3 +230,4 @@ const WalletTest: React.FC = () => {
 };
 
 export default WalletTest;
+ 

@@ -5,13 +5,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { ProfileProvider, useProfile } from "@/contexts/ProfileContext";
 import { useAnchor } from "@/hooks/useAnchor";
-import type { Sodap } from "@/idl/sodap";
-import { Program } from "@coral-xyz/anchor";
 import {
   createPurchaseTransaction,
   sendTransaction,
 } from "@/utils/transactionBuilder";
-// Use common transaction builder for all stores
 import { PaymentDetailsCard } from "@/components/payment/PaymentDetailsCard";
 import { PaymentSuccessDialog } from "@/components/payment/PaymentSuccessDialog";
 import { useCart } from "@/hooks/useCart";
@@ -32,20 +29,19 @@ const PaymentContent: React.FC = () => {
   const { cartItems } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [cartTotal, setCartTotal] = useState("0");
-  const [storeId, setStoreId] = useState<string>(
-    "4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv"
-  );
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState(0);
   const [transactionSignature, setTransactionSignature] = useState<
     string | null
   >(null);
 
+  // Store ID - In a real app, this would come from the store selection or context
+  // For this implementation, we're using a placeholder that would be replaced with a real store ID
+  const STORE_ID = "4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv"; // Replace with actual store ID
+
   useEffect(() => {
     // Get cart total from session storage
     const total = sessionStorage.getItem("cartTotal");
-    const storedStoreId = sessionStorage.getItem("storeId");
-
     if (total) {
       setCartTotal(total);
     } else {
@@ -53,11 +49,6 @@ const PaymentContent: React.FC = () => {
       toast.error("No payment amount found. Redirecting to cart...");
       navigate("/cart");
       return;
-    }
-
-    // Set store ID if available
-    if (storedStoreId) {
-      setStoreId(storedStoreId);
     }
 
     // If cart is empty, redirect back to cart
@@ -81,7 +72,19 @@ const PaymentContent: React.FC = () => {
             if (success) {
               console.log("Demo wallet connected automatically");
             } else {
-              toast.error("Failed to connect demo wallet");
+              toast.error(
+                "Failed to connect demo wallet. Will retry once more."
+              );
+              // Retry once after a short delay
+              setTimeout(() => {
+                connectWallet().then((retrySuccess) => {
+                  if (!retrySuccess) {
+                    toast.error(
+                      "Failed to connect wallet after retry. Please connect manually."
+                    );
+                  }
+                });
+              }, 1500);
             }
           });
         } else {
@@ -126,11 +129,40 @@ const PaymentContent: React.FC = () => {
       setIsProcessing(true);
       console.log("Starting payment process with wallet:", walletAddress);
 
+      // Check if we're in development mode
+      const isDevelopmentMode = process.env.NODE_ENV === "development";
+
       // Create and send a real Solana transaction
       const subtotal = parseFloat(cartTotal);
 
       if (!connection) {
         toast.error("Connection to Solana not established");
+        setIsProcessing(false);
+        return;
+      }
+
+      // In development mode, we can simulate a successful payment
+      if (isDevelopmentMode) {
+        console.log("Development mode: Simulating payment");
+
+        // Wait a bit to simulate processing
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        // Generate a fake transaction signature
+        const fakeSignature =
+          "SIM" + Math.random().toString(36).substring(2, 15);
+        setTransactionSignature(fakeSignature);
+
+        // Clear the cart
+        localStorage.setItem("cart", JSON.stringify([]));
+        window.dispatchEvent(new Event("cartUpdated"));
+
+        // Set points and show success dialog
+        const pointsEarned = Math.round(parseFloat(cartTotal));
+        setEarnedPoints(pointsEarned);
+
+        toast.success("Payment simulation successful!");
+        setShowSuccessDialog(true);
         setIsProcessing(false);
         return;
       }
@@ -162,39 +194,19 @@ const PaymentContent: React.FC = () => {
       }
 
       try {
-        // Ensure window.solana is set if only phantom.solana is available
-        if (!window.solana && window.phantom?.solana) {
-          window.solana = window.phantom.solana;
-          console.log("Set window.solana from window.phantom.solana");
-        }
-
-        // Use standard transaction builder for all stores including Sotap Watch Store (ID 5)
-        console.log("Using standard transaction builder");
         const transaction = await createPurchaseTransaction(
           cartItems,
           subtotal,
-          storeId, // Use the store ID from state
+          STORE_ID,
           connection,
-          program as Program<Sodap>,
+          program,
           walletPublicKey
         );
 
         // Send the transaction
         toast.info("Sending transaction to Solana network...");
-        console.log("Sending transaction to network with parameters:", {
-          cartItems: cartItems,
-          subtotal: subtotal,
-          storeId: storeId,
-          walletPublicKey: walletPublicKey.toString(),
-        });
-
         const signature = await sendTransaction(transaction, connection);
         setTransactionSignature(signature);
-
-        console.log("Transaction successful with signature:", signature);
-        console.log(
-          `Transaction explorer link: https://explorer.solana.com/tx/${signature}?cluster=devnet`
-        );
 
         toast.success(
           "Payment successful! Transaction signature: " + signature
@@ -226,12 +238,16 @@ const PaymentContent: React.FC = () => {
           } else if (error.message.includes("insufficient funds")) {
             errorMessage =
               "Insufficient funds in your wallet to complete this transaction.";
-          } else if (error.message.includes("Not enough lamports")) {
+          } else if (
+            error.message.includes("Cannot read properties of undefined")
+          ) {
             errorMessage =
-              "Insufficient funds in your wallet. Please add more SOL to your wallet.";
-          } else if (error.message.includes("Transaction simulation failed")) {
+              "Failed to initialize program properly. Please refresh the page and try again.";
+          } else if (
+            error.message.includes("Failed to create purchase instruction")
+          ) {
             errorMessage =
-              "Transaction simulation failed. There might be an issue with the contract or your wallet balance.";
+              "Transaction failed: The store program doesn't support this transaction type.";
           } else {
             errorMessage = `Payment failed: ${error.message}`;
           }

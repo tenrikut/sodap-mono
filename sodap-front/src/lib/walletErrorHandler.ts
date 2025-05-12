@@ -2,47 +2,8 @@ import {
   WalletError,
   WalletNotConnectedError,
   WalletNotReadyError,
-  WalletConnectionError,
-  WalletDisconnectedError,
-  WalletTimeoutError,
-  WalletSignTransactionError,
 } from "@solana/wallet-adapter-base";
-import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
-
-interface PhantomProvider {
-  publicKey: PublicKey | null;
-  isConnected: boolean;
-  autoApprove: boolean;
-  connect: (options?: {
-    onlyIfTrusted?: boolean;
-  }) => Promise<{ publicKey: PublicKey }>;
-  disconnect: () => Promise<void>;
-  signTransaction: <T extends Transaction | VersionedTransaction>(
-    transaction: T
-  ) => Promise<T>;
-  signAllTransactions: <T extends Transaction | VersionedTransaction>(
-    transactions: T[]
-  ) => Promise<T[]>;
-  signMessage: (
-    message: Uint8Array,
-    display?: "hex" | "utf8"
-  ) => Promise<{ signature: Uint8Array }>;
-  isUnlocked: boolean;
-}
-
-interface TransactionError extends Error {
-  code?: number;
-}
-
-declare global {
-  interface Window {
-    phantom?: {
-      solana?: {
-        isPhantom?: boolean;
-      };
-    };
-  }
-}
+import type { PublicKey } from "@solana/web3.js";
 
 /**
  * Helper function to handle wallet errors and provide user-friendly messages
@@ -50,105 +11,104 @@ declare global {
 export function handleWalletError(error: unknown): string {
   console.error("Wallet error:", error);
 
-  // Handle known wallet adapter errors
   if (error instanceof WalletNotConnectedError) {
     return "Please connect your wallet to continue.";
   }
 
   if (error instanceof WalletNotReadyError) {
-    return "Wallet not ready. Please check if it is installed and unlocked.";
-  }
-
-  if (error instanceof WalletConnectionError) {
-    return "Failed to connect to wallet. Please try again.";
-  }
-
-  if (error instanceof WalletDisconnectedError) {
-    return "Wallet disconnected. Please reconnect to continue.";
-  }
-
-  if (error instanceof WalletTimeoutError) {
-    return "Wallet connection timed out. Please try again.";
-  }
-
-  if (error instanceof WalletSignTransactionError) {
-    return "Failed to sign transaction. Please try again.";
+    return "Wallet not ready. Please check if Phantom is installed and unlocked.";
   }
 
   if (error instanceof WalletError) {
     if (error.message.includes("User rejected")) {
-      return "Connection rejected. Please approve the connection request.";
+      return "Connection rejected. Please approve the connection request in your wallet.";
+    }
+    if (error.message.includes("timeout")) {
+      return "Connection timed out. Please try again.";
+    }
+    if (error.message.includes("No wallet selected")) {
+      return "Please select a wallet to connect.";
+    }
+    if (error.message.includes("Wallet not found")) {
+      return "Wallet not found. Please make sure Phantom is installed and unlocked.";
     }
     return `Wallet error: ${error.message}`;
   }
 
-  // Handle transaction-specific errors
   if (error instanceof Error) {
-    const txError = error as TransactionError;
-
-    if (txError.code === -32603) {
-      return "Transaction failed. Please check your wallet balance.";
+    // Common Solana transaction errors
+    if (error.message.includes("0x1")) {
+      return "Insufficient funds for transaction.";
     }
-
-    if (txError.code === -32002) {
-      return "Wallet request pending. Please check your wallet.";
+    if (error.message.includes("0x2")) {
+      return "Invalid account data.";
     }
-
-    // Solana Pay specific errors
-    if (error.message.includes("Invalid payment request")) {
-      return "Invalid payment request. Please check the transaction details.";
+    if (error.message.includes("Custom program error: 0x1")) {
+      return "Program error: Invalid instruction data.";
     }
-
-    if (error.message.includes("Payment cancelled")) {
-      return "Payment was cancelled. Please try again.";
+    if (error.message.includes("Custom program error: 0x2")) {
+      return "Program error: Invalid program account data.";
     }
-
-    if (error.message.includes("Point of sale error")) {
-      return "Store transaction error. Please try again or contact support.";
-    }
-
-    // Transaction simulation errors
-    if (error.message.includes("blockhash not found")) {
+    if (error.message.includes("blockhash")) {
       return "Transaction expired. Please try again.";
     }
-
+    if (error.message.includes("Blockhash not found")) {
+      return "Network error. Please try again.";
+    }
     if (error.message.includes("insufficient funds")) {
-      return "Insufficient funds in your wallet. Please add funds and try again.";
+      return "Insufficient SOL in your wallet. Please add funds and try again.";
     }
 
-    // Network errors
-    if (error.message.includes("rate limit")) {
-      return "Too many requests. Please wait a moment and try again.";
+    // User interaction errors
+    if (error.message.includes("User rejected")) {
+      return "Transaction rejected. Please approve the transaction in your wallet.";
+    }
+    if (error.message.includes("timeout")) {
+      return "Transaction timed out. Please try again.";
+    }
+    if (error.message.includes("Failed to connect")) {
+      return "Failed to connect to wallet. Please try again or use a different wallet.";
     }
 
-    if (
-      error.message.includes("socket hang up") ||
-      error.message.includes("network error") ||
-      error.message.includes("failed to fetch")
-    ) {
-      return "Network connection error. Please check your internet connection.";
+    // Transaction signing errors
+    if (error.message.includes("failed to sign")) {
+      return "Failed to sign transaction. Please try again.";
+    }
+    if (error.message.includes("Transaction was not confirmed")) {
+      return "Transaction was not confirmed. Please check your wallet for details.";
     }
 
-    // Return original error message if no specific handling
-    return error.message;
+    return `Error: ${error.message}`;
   }
 
-  // Fallback error message
   return "An unexpected error occurred. Please try again.";
+}
+
+/**
+ * Type definition for Phantom wallet window object
+ */
+interface PhantomWindow extends Window {
+  phantom?: {
+    solana?: {
+      isPhantom: boolean;
+      connect: (options?: {
+        onlyIfTrusted?: boolean;
+      }) => Promise<{ publicKey: PublicKey }>;
+      disconnect: () => Promise<void>;
+      signTransaction: <T>(transaction: T) => Promise<T>;
+      signAllTransactions: <T>(transactions: T[]) => Promise<T[]>;
+      isUnlocked: () => Promise<boolean>;
+    };
+  };
 }
 
 /**
  * Helper function to detect if Phantom wallet is installed
  */
 export function isPhantomInstalled(): boolean {
-  try {
-    return (
-      typeof window !== "undefined" &&
-      window.phantom?.solana?.isPhantom === true
-    );
-  } catch {
-    return false;
-  }
+  if (typeof window === "undefined") return false;
+  const phantom = (window as PhantomWindow)?.phantom;
+  return phantom && phantom.solana && phantom.solana.isPhantom;
 }
 
 /**
@@ -162,19 +122,8 @@ export function getNetworkName(network: string): string {
       return "Testnet";
     case "devnet":
       return "Devnet";
+    case "localnet":
     default:
-      return "Unknown Network";
-  }
-}
-
-/**
- * Helper to check if a wallet address is valid
- */
-export function isValidWalletAddress(address: string): boolean {
-  try {
-    if (!address) return false;
-    return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
-  } catch {
-    return false;
+      return "Local Network";
   }
 }

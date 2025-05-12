@@ -34,7 +34,7 @@ deploy    = "anchor deploy --provider.cluster localnet"
 # Run your on-chain tests
 test      = "anchor test"
 # After building, copy the generated IDL & TypeScript into your frontend
-postbuild = "cp target/idl/sodap.json ../sodap-front/src/idl/sodap.json && cp target/types/sodap.ts ../sodap-front/src/idl/sodap.ts"
+postbuild = "mkdir -p ../sodap-front/src/idl && cp target/idl/sodap.json ../sodap-front/src/idl/sodap.json && cp target/types/sodap.ts ../sodap-front/src/idl/sodap.ts && echo 'Successfully synced IDL files to frontend'"
 
 [test.validator]
 # Reset validator state before tests

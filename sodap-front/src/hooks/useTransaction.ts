@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Transaction, TransactionInstruction } from "@solana/web3.js";
+import { Transaction, TransactionInstruction, Signer } from "@solana/web3.js";
 import { toast } from "sonner";
 import { handleWalletError } from "@/lib/walletErrorHandler";
 import {
@@ -70,13 +70,7 @@ export function useTransaction(options: UseTransactionOptions = {}) {
   };
 
   const sendAndConfirmTransaction = useCallback(
-    async (
-      instructions: TransactionInstruction[],
-      signers: Array<{
-        publicKey: import("@solana/web3.js").PublicKey;
-        secretKey: Uint8Array;
-      }> = []
-    ) => {
+    async (instructions: TransactionInstruction[], signers: Signer[] = []) => {
       if (!publicKey) {
         throw new Error("Wallet not connected");
       }
@@ -107,7 +101,7 @@ export function useTransaction(options: UseTransactionOptions = {}) {
           onSuccess?.(signature);
           return signature;
         } else {
-          throw new Error(`Transaction failed with status: ${status}`);
+          throw new Error("Transaction failed with status: " + status);
         }
       } catch (error) {
         const errorMessage = handleWalletError(error);

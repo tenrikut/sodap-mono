@@ -5,7 +5,7 @@ import type { Sodap } from "@/idl/sodap";
 
 // Define the context shape
 export interface AnchorContextType {
-  program: Program<Sodap> | null;
+  program: Program | null;
   connection: Connection | null;
   walletAddress: string | null;
   isConnected: boolean;

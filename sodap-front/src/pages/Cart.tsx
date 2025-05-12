@@ -21,15 +21,8 @@ const CartContent: React.FC = () => {
       "Navigating to payment page with cart total:",
       subtotal.toFixed(3)
     );
-
-    // Get store ID from cart items
-    // If you need storeId, ensure it exists on the product type and data.
-    // For now, fallback to a default value.
-    const storeId = "1";
-
     // Save cart details for the payment page
     sessionStorage.setItem("cartTotal", subtotal.toFixed(3));
-    sessionStorage.setItem("storeId", storeId);
 
     // Navigate to payment page
     navigate("/payment");
@@ -47,38 +40,36 @@ const CartContent: React.FC = () => {
       return;
     }
 
-    // Check if wallet is already connected
-    if (!walletAddress) {
-      console.log("Wallet not connected, attempting to connect...");
-
-      // Show wallet selection modal
-      toast.info("Please select and connect your wallet to continue checkout");
-
-      // Wait a short delay to allow UI to update, then connect wallet
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      try {
-        const success = await connectWallet();
-        console.log("Wallet connection result:", success);
-
-        if (success) {
-          console.log("Connection successful, navigating to payment");
-          navigateToPayment();
-        } else {
-          toast.error("Failed to connect wallet. Please try again.");
+    try {
+      // Check if wallet is already connected
+      if (!walletAddress) {
+        console.log("Wallet not connected, attempting to connect...");
+        // If wallet not connected, connect wallet first
+        try {
+          const success = await connectWallet();
+          console.log("Wallet connection result:", success);
+          if (success) {
+            console.log("Connection successful, navigating to payment");
+            navigateToPayment();
+          } else {
+            toast.error("Failed to connect wallet. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error connecting wallet:", error);
+          toast.error(
+            `Connection error: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
+          );
         }
-      } catch (error) {
-        console.error("Error connecting wallet:", error);
-        toast.error(
-          `Connection error: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        );
+      } else {
+        console.log("Wallet already connected, navigating to payment");
+        // If wallet already connected, proceed to payment
+        navigateToPayment();
       }
-    } else {
-      console.log("Wallet already connected, navigating to payment");
-      // If wallet already connected, proceed to payment
-      navigateToPayment();
+    } catch (error) {
+      console.error("Unexpected error in handleCheckout:", error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
 

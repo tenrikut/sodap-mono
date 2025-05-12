@@ -1,12 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token;
-pub mod utils;
 
-// Re-export everything from user_wallet:
-pub use instructions::user_wallet::*;
-
-// Re-export everything from utils::pda:
-pub use utils::pda::*;
 // Declare the program ID used by Anchor
 declare_id!("4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv");
 
@@ -15,8 +9,10 @@ mod error;
 mod instructions;
 mod state;
 mod types;
+mod utils;
 
-pub use crate::instructions::user_wallet::CreateUserWallet;
+pub use instructions::user_wallet::*;
+pub use utils::pda::*;
 
 // Define ProductAttribute type since it's not found in types.rs
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]

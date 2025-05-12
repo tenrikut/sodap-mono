@@ -1,10 +1,10 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { useCallback, useState } from "react";
-import { useProgram } from "./useProgram";
+import { useProgram } from "../../../sodap-front/src/hooks/useProgram";
 
 export const useWalletAndStore = () => {
-  const { connection } = useConnection();
+  useConnection(); // Keep the hook for side effects but don't destructure connection
   const { publicKey } = useWallet();
   const { program } = useProgram();
   const [loading, setLoading] = useState(false);

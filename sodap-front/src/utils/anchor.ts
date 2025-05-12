@@ -1,15 +1,13 @@
-import { AnchorProvider, Wallet, Program, Idl } from "@coral-xyz/anchor";
+import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import {
   Connection,
   Keypair,
   PublicKey,
   Transaction,
   VersionedTransaction,
+  TransactionVersion,
 } from "@solana/web3.js";
-import { PROGRAM_ID as PROGRAM_ID_STRING, IDL } from "../idl";
-import type { Sodap } from "../idl/sodap";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useEffect, useState } from "react";
+import { IDL, PROGRAM_ID as PROGRAM_ID_STRING } from "../idl";
 
 // Program ID from the Anchor.toml file - MUST match what's in the Rust code
 export const PROGRAM_ID = new PublicKey(PROGRAM_ID_STRING);
@@ -52,194 +50,134 @@ export const createAnchorProvider = (
 };
 
 /**
- * Create a safe IDL that won't cause "Cannot read properties of undefined" errors
+ * Create a wallet object from a private key
+ * Only for testing - do not use in production
  */
-const createSafeIdl = (): Idl => {
-  try {
-    // Create a minimal valid IDL structure with all required properties
-    // Make sure to match the Idl type from @coral-xyz/anchor
-    const safeIdl: Idl = {
-      address: PROGRAM_ID.toString(),
-      metadata: IDL.metadata || {
-        name: "sodap",
-        version: "0.1.0",
-        spec: "0.1.0",
-        description: "Created with Anchor",
-      },
-      instructions: (IDL.instructions || []).map((instruction) => ({
-        name: instruction.name || "",
-        discriminator: instruction.discriminator || [],
-        accounts: (instruction.accounts || []).map((account) => ({
-          name: account.name || "",
-          isMut: Boolean(account.writable), // Convert writable to isMut
-          isSigner: Boolean(account.signer), // Convert signer to isSigner
-          isOptional: false,
-        })),
-        args: (instruction.args || []).map((arg) => ({
-          name: arg.name || "",
-          type: arg.type || "u8",
-        })),
-      })),
-      accounts: [],
-      types: [],
-      events: [],
-      errors: [],
-    };
+export const createTestWallet = (privateKey?: Uint8Array): Wallet => {
+  let keypair: Keypair;
 
-    console.log(
-      "Created safe IDL with",
-      safeIdl.instructions.length,
-      "instructions"
-    );
-    return safeIdl;
-  } catch (error) {
-    console.error("Error creating safe IDL:", error);
-    // Return minimal valid IDL if there's an error
-    const fallbackIdl: Idl = {
-      address: PROGRAM_ID.toString(),
-      metadata: {
-        name: "sodap",
-        version: "0.1.0",
-        spec: "0.1.0",
-        description: "Created with Anchor",
-      },
-      instructions: [],
-      accounts: [],
-      types: [],
-      events: [],
-      errors: [],
-    };
-    return fallbackIdl;
+  if (privateKey) {
+    keypair = Keypair.fromSecretKey(privateKey);
+  } else {
+    // Demo mode - generate a random keypair
+    keypair = Keypair.generate();
   }
+
+  // Create a wallet adapter that implements the Wallet interface
+  const wallet: Wallet = {
+    publicKey: keypair.publicKey,
+    signTransaction: async <T extends Transaction | VersionedTransaction>(
+      tx: T
+    ): Promise<T> => {
+      if (tx instanceof Transaction) {
+        tx.partialSign(keypair);
+      }
+      return tx;
+    },
+    signAllTransactions: async <T extends Transaction | VersionedTransaction>(
+      txs: T[]
+    ): Promise<T[]> => {
+      return txs.map((tx) => {
+        if (tx instanceof Transaction) {
+          tx.partialSign(keypair);
+        }
+        return tx;
+      });
+    },
+    // Add payer getter to satisfy the Wallet interface
+    get payer() {
+      return keypair;
+    },
+  };
+
+  return wallet;
 };
 
 /**
- * Create an Anchor program with the given provider
- * This uses a safe IDL structure to avoid "Cannot read properties of undefined" errors
+ * Create an Anchor program instance
  */
-export const createAnchorProgram = (
-  provider: AnchorProvider
-): Program<Sodap> => {
-  if (!provider) {
-    throw new Error("Provider is required");
-  }
-
+export const createAnchorProgram = (provider: AnchorProvider) => {
   try {
-    // Create a safe IDL
-    const safeIdl = createSafeIdl();
-
-    // Make sure provider is an AnchorProvider instance before passing to Program
-    if (!(provider instanceof AnchorProvider)) {
-      throw new Error("Provider must be an instance of AnchorProvider");
+    if (!provider) {
+      throw new Error("Provider is null or undefined");
     }
 
-    // Create the program with the safe IDL
-    return new Program<Sodap>(safeIdl, PROGRAM_ID, provider);
+    // Ensure the IDL is properly formatted for Anchor
+    const idlCopy = JSON.parse(JSON.stringify(IDL));
+
+    // Make sure we're not using a malformed IDL
+    if (!idlCopy || typeof idlCopy !== "object") {
+      throw new Error("Invalid IDL format");
+    }
+
+    // Fix potential issues in the IDL format
+    if (idlCopy.instructions) {
+      idlCopy.instructions.forEach((ix: { discriminator?: string }) => {
+        // Some versions of Anchor need this format
+        if (ix.discriminator) delete ix.discriminator;
+      });
+    }
+
+    console.log("Creating Anchor program with:");
+    console.log("- Provider connection:", provider.connection.rpcEndpoint);
+    console.log(
+      "- Provider wallet public key:",
+      provider.wallet.publicKey.toString()
+    );
+    console.log("- Program ID:", PROGRAM_ID.toString());
+
+    const program = new Program(idlCopy, PROGRAM_ID, provider);
+
+    // Verify the program was created properly
+    if (!program || !program.programId) {
+      throw new Error("Program creation failed - program or programId is null");
+    }
+
+    return program;
   } catch (error) {
     console.error("Error creating Anchor program:", error);
-    throw error;
+    // Re-throw with more context
+    throw new Error(
+      `Failed to initialize program: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
   }
 };
 
 /**
  * Creates a phantom wallet adapter for Anchor
- * This properly implements the Wallet interface required by Anchor
  */
-export const createPhantomWalletAdapter = (
-  publicKey: PublicKey,
-  signTx?: <T extends Transaction | VersionedTransaction>(
-    transaction: T
-  ) => Promise<T>,
-  signAllTxs?: <T extends Transaction | VersionedTransaction>(
-    transactions: T[]
-  ) => Promise<T[]>
-): Wallet => {
+export const createPhantomWalletAdapter = (publicKey: PublicKey): Wallet => {
   // Create a keypair that will be associated with the public key for payer
   const dummyKeypair = Keypair.generate();
-
-  // Ensure we have valid sign functions or fallbacks
   Object.defineProperty(dummyKeypair, "publicKey", {
     get: () => publicKey,
   });
 
-  // Create the wallet object with typed methods
-  const walletAdapter: Wallet = {
+  // This adapter works with the Phantom extension
+  const wallet: Wallet = {
     publicKey,
     signTransaction: async <T extends Transaction | VersionedTransaction>(
       tx: T
     ): Promise<T> => {
-      // Use provided signTransaction function if available
-      if (signTx) {
-        return await signTx(tx);
+      if (typeof window === "undefined" || !window.phantom?.solana) {
+        throw new Error("Phantom wallet not available");
       }
-      // Fall back to window.phantom?.solana for signTransaction if no function provided
-      if (!window.phantom?.solana) {
-        throw new Error(
-          "No signTransaction function provided and Phantom wallet not available"
-        );
-      }
-      return window.phantom.solana.signTransaction(tx) as Promise<T>;
+      return await window.phantom.solana.signTransaction(tx);
     },
     signAllTransactions: async <T extends Transaction | VersionedTransaction>(
       txs: T[]
     ): Promise<T[]> => {
-      // Use provided signAllTransactions function if available
-      if (signAllTxs) {
-        return await signAllTxs(txs);
+      if (typeof window === "undefined" || !window.phantom?.solana) {
+        throw new Error("Phantom wallet not available");
       }
-      // Fall back to window.phantom?.solana for signAllTransactions if no function provided
-      if (!window.phantom?.solana) {
-        throw new Error(
-          "No signAllTransactions function provided and Phantom wallet not available"
-        );
-      }
-      return window.phantom.solana.signAllTransactions(txs) as Promise<T[]>;
+      return await window.phantom.solana.signAllTransactions(txs);
     },
-    // The payer property is required by Anchor Provider
     get payer() {
       return dummyKeypair;
     },
   };
 
-  return walletAdapter;
+  return wallet;
 };
-
-/**
- * Hook to use the Sodap program in React components
- * This will properly handle wallet connection and program initialization
- */
-export function useSodapProgram() {
-  const { connection } = useConnection();
-  const wallet = useWallet();
-  const [program, setProgram] = useState<Program<Sodap> | null>(null);
-
-  useEffect(() => {
-    if (wallet?.publicKey && connection) {
-      try {
-        // Convert wallet-adapter wallet to Anchor wallet
-        const anchorWallet = createPhantomWalletAdapter(
-          wallet.publicKey,
-          wallet.signTransaction,
-          wallet.signAllTransactions
-        );
-
-        // Create Anchor provider and program
-        const provider = createAnchorProvider(connection, anchorWallet);
-        const program = createAnchorProgram(provider);
-
-        setProgram(program);
-      } catch (error) {
-        console.error("Error initializing Sodap program:", error);
-      }
-    } else {
-      setProgram(null);
-    }
-  }, [
-    connection,
-    wallet.publicKey,
-    wallet.signTransaction,
-    wallet.signAllTransactions,
-  ]);
-
-  return program;
-}

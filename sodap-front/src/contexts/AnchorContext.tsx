@@ -1,87 +1,40 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Connection, PublicKey, clusterApiUrl, Keypair } from "@solana/web3.js";
+import React, { useState, useEffect, useContext } from "react";
+import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
-import { createAnchorProvider, createAnchorProgram } from "../utils/anchor";
-import { Sodap } from "../idl/sodap";
+import { IDL, PROGRAM_ID } from "../idl";
+import {
+  createAnchorProvider,
+  createPhantomWalletAdapter,
+  createAnchorProgram,
+} from "../utils/anchor";
 import { handleWalletError } from "@/lib/walletErrorHandler";
 import { toast } from "sonner";
-import { AnchorContext } from "./AnchorContext.context";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { AnchorContext, AnchorContextType } from "./AnchorContext.context";
 
+// Export a hook for using the context directly - for backward compatibility
+export const useAnchor = (): AnchorContextType => useContext(AnchorContext);
+
+// Context provider component
 export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [program, setProgram] = useState<Program<Sodap> | null>(null);
+  const [program, setProgram] = useState<Program | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Use the wallet adapter from @solana/wallet-adapter-react
-  const {
-    publicKey,
-    connecting,
-    connected,
-    disconnect: walletDisconnect,
-    connect: walletAdapterConnect,
-    signTransaction,
-    signAllTransactions,
-  } = useWallet();
-
-  // Initialize Anchor program using the connected wallet
-  const initializeAnchorProgram = useCallback(
-    async (address: string, conn: Connection): Promise<void> => {
-      try {
-        // Use the wallet adapter directly
-        if (!publicKey || !signTransaction || !signAllTransactions) {
-          throw new Error("Wallet not fully connected");
-        }
-
-        // Create a wallet adapter for Anchor that uses the wallet-adapter-react
-        const dummyKeypair = Keypair.generate();
-        // Override the keypair's publicKey to match wallet
-        Object.defineProperty(dummyKeypair, "publicKey", {
-          get: () => publicKey,
-        });
-
-        const wallet = {
-          publicKey,
-          signTransaction,
-          signAllTransactions,
-          // Add payer property needed by Anchor
-          get payer() {
-            return dummyKeypair;
-          },
-        };
-
-        const provider = createAnchorProvider(conn, wallet);
-        const anchorProgram = createAnchorProgram(provider);
-        setProgram(anchorProgram);
-        setIsConnected(true);
-      } catch (error) {
-        console.error("Failed to initialize Anchor program:", error);
-        toast.error("Failed to initialize program");
-        setIsConnected(false);
-        setProgram(null);
-      }
-    },
-    [publicKey, signTransaction, signAllTransactions]
-  );
-
   // Initialize connection
   useEffect(() => {
     const initConnection = async () => {
       try {
-        // First try to use the RPC URL, then fallback to clusterApiUrl
-        const rpcUrl = import.meta.env.VITE_SOLANA_RPC_URL;
-        const network = import.meta.env.VITE_SOLANA_NETWORK || "devnet";
-
-        // Use the explicit RPC URL if available, otherwise use clusterApiUrl
+        // Use environment variables with fallbacks
         const endpoint =
-          rpcUrl ||
-          (process.env.NODE_ENV === "development" && network === "localhost"
-            ? "http://localhost:8899"
-            : clusterApiUrl(network as "devnet" | "testnet" | "mainnet-beta"));
+          import.meta.env.VITE_SOLANA_NETWORK ||
+          process.env.REACT_APP_SOLANA_NETWORK ||
+          (process.env.NODE_ENV === "development"
+            ? "http://localhost:8999"
+            : clusterApiUrl("devnet"));
 
         console.log("Connecting to Solana at:", endpoint);
         const connection = new Connection(endpoint, "confirmed");
@@ -92,7 +45,19 @@ export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
         if (savedWalletAddress) {
           console.log("Found previously connected wallet:", savedWalletAddress);
           setWalletAddress(savedWalletAddress);
-          await initializeAnchorProgram(savedWalletAddress, connection);
+
+          try {
+            await initializeAnchorProgram(savedWalletAddress, connection);
+          } catch (error) {
+            console.error(
+              "Error initializing with saved wallet address:",
+              error
+            );
+            // Clear the saved wallet info since it failed
+            sessionStorage.removeItem("walletAddress");
+            setWalletAddress(null);
+            // Don't show an error toast here - just quietly fail
+          }
         }
       } catch (error) {
         console.error("Error initializing connection:", error);
@@ -105,83 +70,87 @@ export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
     initConnection();
   }, []);
 
-  // Track wallet connection status
-  useEffect(() => {
-    if (connected && publicKey && connection) {
-      setWalletAddress(publicKey.toString());
+  const initializeAnchorProgram = async (
+    address: string,
+    conn: Connection
+  ): Promise<void> => {
+    try {
+      console.log("Initializing Anchor program with address:", address);
+      const publicKey = new PublicKey(address);
+      const wallet = createPhantomWalletAdapter(publicKey);
+      const provider = createAnchorProvider(conn, wallet);
+
+      // Ensure IDL and program ID are correctly configured
+      console.log(
+        "Creating Anchor program with program ID:",
+        PROGRAM_ID.toString()
+      );
+      const anchorProgram = createAnchorProgram(provider);
+
+      if (!anchorProgram) {
+        throw new Error("Failed to create Anchor program - program is null");
+      }
+
+      console.log(
+        "Program successfully initialized:",
+        anchorProgram.programId.toString()
+      );
+      setProgram(anchorProgram);
       setIsConnected(true);
-
-      // Initialize Anchor program when wallet connects
-      initializeAnchorProgram(publicKey.toString(), connection);
-    } else if (!connecting && !connected) {
+    } catch (error) {
+      console.error("Failed to initialize Anchor program:", error);
+      toast.error(
+        "Failed to initialize program: " +
+          (error instanceof Error ? error.message : "Unknown error")
+      );
       setIsConnected(false);
-      // Do not reset program or wallet address immediately
-      // This allows for temporary disconnections without losing state
+      setProgram(null);
     }
-  }, [connected, connecting, publicKey, connection, initializeAnchorProgram]);
+  };
 
-  const connectWallet = useCallback(async (): Promise<boolean> => {
+  // Connect wallet function
+  const connectWallet = async (): Promise<boolean> => {
     try {
       if (!connection) {
-        console.error("No connection available");
-        toast.error("No connection to Solana. Please reload the page.");
-        return false;
+        throw new Error("No connection available");
       }
 
-      console.log("Attempting to connect wallet...");
-
-      // Check if wallet adapter is available
-      if (!walletAdapterConnect) {
-        console.error("Wallet adapter connect function is undefined");
-        toast.error("Wallet connection not available. Please try again later.");
-        return false;
+      if (typeof window === "undefined" || !window.phantom?.solana) {
+        throw new Error("Phantom wallet not installed");
       }
 
-      // Force wallet modal to appear by using document.dispatchEvent
-      const walletBtn = document.querySelector(
-        ".wallet-adapter-button-trigger"
-      );
-      if (walletBtn instanceof HTMLElement) {
-        walletBtn.click();
-      } else {
-        // If button not found, try the direct connect method
-        await walletAdapterConnect();
+      console.log("Connecting to Phantom wallet...");
+      const { publicKey } = await window.phantom.solana.connect();
+      if (!publicKey) {
+        throw new Error("Failed to get public key from wallet");
       }
 
-      // Wait for connection
-      let attempts = 0;
-      const maxAttempts = 10;
+      const address = publicKey.toString();
+      console.log("Wallet connected with address:", address);
 
-      while (!connected && attempts < maxAttempts) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        attempts++;
-      }
+      setWalletAddress(address);
+      sessionStorage.setItem("walletAddress", address);
 
-      console.log(`Wallet connected: ${connected} after ${attempts} attempts`);
-      return connected;
+      // Initialize Anchor program with the connected wallet
+      await initializeAnchorProgram(address, connection);
+      toast.success("Wallet connected successfully");
+      return true;
     } catch (error) {
-      console.error("Error during wallet connection:", error);
-
-      // Use the wallet error handler to provide a user-friendly message
+      console.error("Error connecting wallet:", error);
       const errorMessage = handleWalletError(error);
       toast.error(errorMessage);
-
-      // Log additional details for debugging
-      if (error instanceof Error) {
-        console.error("Error name:", error.name);
-        console.error("Error message:", error.message);
-        console.error("Error stack:", error.stack);
-      }
-
       return false;
     }
-  }, [connection, walletAdapterConnect]);
+  };
 
-  const disconnectWallet = useCallback(() => {
+  // Disconnect wallet function
+  const disconnectWallet = async (): Promise<void> => {
     try {
-      walletDisconnect();
-      setProgram(null);
+      if (window.phantom?.solana) {
+        await window.phantom.solana.disconnect();
+      }
       setWalletAddress(null);
+      setProgram(null);
       setIsConnected(false);
       sessionStorage.removeItem("walletAddress");
       toast.success("Wallet disconnected");
@@ -189,7 +158,7 @@ export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Error disconnecting wallet:", error);
       toast.error("Failed to disconnect wallet");
     }
-  }, [walletDisconnect]);
+  };
 
   return (
     <AnchorContext.Provider
@@ -198,9 +167,9 @@ export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
         connection,
         walletAddress,
         isConnected,
-        isLoading,
         connectWallet,
         disconnectWallet,
+        isLoading,
       }}
     >
       {children}

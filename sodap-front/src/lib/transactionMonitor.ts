@@ -33,14 +33,7 @@ export async function monitorTransaction(
   const { timeout = 60000, interval = 1000 } = options;
 
   return new Promise((resolve) => {
-    let timeoutId: NodeJS.Timeout;
-    let intervalId: NodeJS.Timeout;
-
-    // Set timeout
-    timeoutId = setTimeout(() => {
-      clearInterval(intervalId);
-      resolve("timeout");
-    }, timeout);
+    // (removed unused timeoutId declaration, now declared on assignment)
 
     const checkTransaction = async () => {
       try {
@@ -88,8 +81,15 @@ export async function monitorTransaction(
       }
     };
 
+    const intervalId: NodeJS.Timeout = setInterval(checkTransaction, interval);
+
+    // Set timeout
+    const timeoutId = setTimeout(() => {
+      clearInterval(intervalId);
+      resolve("timeout");
+    }, timeout);
+
     // Start polling
-    intervalId = setInterval(checkTransaction, interval);
     checkTransaction(); // Check immediately as well
   });
 }
@@ -111,3 +111,8 @@ export function getTransactionStatusMessage(status: TransactionStatus): string {
       return "Unknown transaction status";
   }
 }
+function checkTransaction() {
+  throw new Error("Function not implemented.");
+}
+
+// removed stub

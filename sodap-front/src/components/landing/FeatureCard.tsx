@@ -17,8 +17,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 }) => {
   return (
     <div className="bg-white p-8 rounded-xl shadow-sm">
-      <div className={`w-12 h-12 ${iconColor} rounded-full flex items-center justify-center mb-6`}>
-        <Icon className={iconColor.replace('bg-', 'text-').replace('/10', '')} size={24} />
+      <div className={`w-12 h-12 ${iconColor || 'bg-purple-100'} rounded-full flex items-center justify-center mb-6`}>
+        <Icon className="text-purple-500" size={24} />
       </div>
       <h3 className="text-xl font-bold mb-3">{title}</h3>
       <p className="text-gray-600">{description}</p>

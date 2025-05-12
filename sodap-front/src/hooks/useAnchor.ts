@@ -1,13 +1,9 @@
-import { useContext } from "react";
-import {
-  AnchorContext,
-  AnchorContextType,
-} from "../contexts/AnchorContext.context";
+/**
+ * Hook to access the Anchor context, which provides wallet connection,
+ * Solana connection, and Anchor program instance.
+ */
 
-export const useAnchor = (): AnchorContextType => {
-  const context = useContext(AnchorContext);
-  if (!context) {
-    throw new Error("useAnchor must be used within a SodapAnchorProvider");
-  }
-  return context;
-};
+// Re-export from the source to avoid duplicates
+import { useAnchor } from "../contexts/AnchorContext";
+export { useAnchor };
+export default useAnchor;
