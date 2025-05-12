@@ -25,22 +25,6 @@ interface StoreKeyManagementProps {
   storeName: string;
 }
 
-// Define store interface for type safety
-interface StoreData {
-  id: string;
-  name: string;
-  description: string;
-  managerId: string;
-  managerName: string;
-  revenue: string;
-  products: number;
-  customers: number;
-  walletCreated?: boolean;
-  walletAddress?: string;
-  hasPda?: boolean;
-  pdaAddress?: string;
-}
-
 export const StoreKeyManagement: React.FC<StoreKeyManagementProps> = ({
   storeId,
   storeName
@@ -309,8 +293,7 @@ export const StoreKeyManagement: React.FC<StoreKeyManagementProps> = ({
   };
 
   // Define store interface for type safety
-  // This duplicate interface should be removed
-interface StoreData2 {
+  interface StoreData {
     id: string;
     name: string;
     description: string;
@@ -329,8 +312,7 @@ interface StoreData2 {
   /**
    * Helper function to update store data in session storage
    */
-  // This duplicate function should be removed
-const updateStoreDataInSessionStorage2 = (updates: {
+  const updateStoreDataInSessionStorage = (updates: {
     walletCreated?: boolean;
     walletAddress?: string;
     hasPda?: boolean;
@@ -410,8 +392,7 @@ const updateStoreDataInSessionStorage2 = (updates: {
   /**
    * Create a Program Derived Address (PDA) for the store
    */
-  // This duplicate function should be removed
-const createStorePda2 = async () => {
+  const createStorePda = async () => {
     if (!publicKey) {
       toast({
         title: "Wallet not connected",

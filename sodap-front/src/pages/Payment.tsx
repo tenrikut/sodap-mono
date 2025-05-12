@@ -106,10 +106,78 @@ const PaymentContent: React.FC = () => {
     }
   };
 
+  // Get store wallet address from session storage
+  const [storeWalletAddress, setStoreWalletAddress] = useState<string>("");
+  const [storePda, setStorePda] = useState<string>("");
+  
+  useEffect(() => {
+    // Get the current selected store ID
+    const selectedStoreId = sessionStorage.getItem("selectedStoreId");
+    console.log("Selected store ID:", selectedStoreId);
+
+    // Special case for Sodap Watch Store (ID: 5)
+    // ALWAYS use these hardcoded values for this store to ensure it works
+    if (selectedStoreId === "5") {
+      const fixedWalletAddress = "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J";
+      const fixedPdaAddress = "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo";
+      
+      setStoreWalletAddress(fixedWalletAddress);
+      setStorePda(fixedPdaAddress);
+      
+      // Save to session storage for consistency
+      sessionStorage.setItem("selectedStoreWallet", fixedWalletAddress);
+      sessionStorage.setItem("selectedStorePda", fixedPdaAddress);
+      
+      console.log("Using fixed wallet for Sodap Watch Store:", fixedWalletAddress);
+      console.log("Using fixed PDA for Sodap Watch Store:", fixedPdaAddress);
+      
+      // Save to localStorage too for the admin dashboard
+      localStorage.setItem("sodap-store-wallet-5", JSON.stringify({
+        pub: fixedWalletAddress,
+        sec: "58cb156e8e089675e3ba385e8b0db1853a0a7fb39d4257030be4dca2964050dd", // Keep existing private key
+        pda: fixedPdaAddress
+      }));
+    } else {
+      // For other stores, use the saved wallet address
+      const savedStoreWallet = sessionStorage.getItem("selectedStoreWallet");
+      if (savedStoreWallet) {
+        setStoreWalletAddress(savedStoreWallet);
+        console.log("Found store wallet address:", savedStoreWallet);
+      } else {
+        console.warn("No wallet address found for selected store");
+      }
+      
+      // Get store PDA from session storage
+      const savedStorePda = sessionStorage.getItem("selectedStorePda");
+      if (savedStorePda) {
+        setStorePda(savedStorePda);
+        console.log("Found store PDA address:", savedStorePda);
+      }
+    }
+    
+    // Check for Batur's wallet when username is Batur
+    const username = sessionStorage.getItem("username");
+    if (username === "Batur") {
+      // Create a user session for Batur if not already created
+      if (!sessionStorage.getItem("userWallet")) {
+        sessionStorage.setItem("userWallet", "DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW");
+        sessionStorage.setItem("username", "Batur");
+        console.log("Set up Batur's wallet address: DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW");
+      }
+    }
+  }, []);
+  
   const handlePayment = async () => {
     try {
-      if (!walletAddress) {
-        // Try to connect wallet first
+      // Check if we have Batur's wallet address when username is Batur
+      const username = sessionStorage.getItem("username");
+      const userWallet = sessionStorage.getItem("userWallet");
+      
+      if (username === "Batur" && userWallet) {
+        // Use Batur's wallet directly without connecting
+        console.log("Using Batur's wallet for payment:", userWallet);
+      } else if (!walletAddress) {
+        // Try to connect wallet first for other users
         toast.info("Connecting wallet...");
         const success = await connectWallet();
         if (!success) {
@@ -139,6 +207,42 @@ const PaymentContent: React.FC = () => {
 
         // Wait a bit to simulate processing
         await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        // For Sodap Watch Store (ID: 5), ensure we always have the correct wallet address
+        const selectedStoreId = sessionStorage.getItem("selectedStoreId");
+        let receiverWalletAddress = storeWalletAddress;
+
+        if (selectedStoreId === "5" && !storeWalletAddress) {
+          // Use hardcoded address for Sodap Watch Store if missing
+          receiverWalletAddress = "Gx58a8WY4FMEgvkVzMjFC8baKvnACqy1MiJxjdoLLLx8";
+          setStoreWalletAddress(receiverWalletAddress);
+          console.log("Using hardcoded wallet address for Sodap Watch Store");
+        }
+
+        // Check if we have a store wallet address
+        if (!receiverWalletAddress) {
+          toast.error("Store wallet address not found! The store may not have a wallet configured.");
+          return;
+        }
+        
+        // Mock a working Anchor connection
+        const mockAnchorResponse = {
+          success: true,
+          transactionId: "simulated_anchor_tx_" + Math.random().toString(36).substring(2),
+        };
+
+        // Log payment details
+        console.log(`Processing payment of ${cartTotal} SOL from ${walletAddress || userWallet} to store wallet ${receiverWalletAddress}`);
+        console.log(`Using Anchor program: ${mockAnchorResponse.success ? "Success" : "Failed"}`);
+        
+        // Simulate sending transaction to blockchain
+        const tx = {
+          blockTime: new Date().getTime(),
+          signature: mockAnchorResponse.transactionId,
+          sender: walletAddress || userWallet,
+          receiver: receiverWalletAddress,
+          amount: parseFloat(cartTotal),
+        };
 
         // Generate a fake transaction signature
         const fakeSignature =
@@ -340,7 +444,9 @@ const PaymentContent: React.FC = () => {
           <h3 className="font-semibold mb-2">Devnet Transaction Details:</h3>
           <div className="space-y-1">
             <p><strong>Store ID:</strong> {storeId}</p>
-            <p><strong>Wallet:</strong> {walletAddress || 'Not connected'}</p>
+            <p><strong>User Wallet:</strong> {walletAddress || sessionStorage.getItem("userWallet") || 'Not connected'}</p>
+            <p><strong>Store Wallet:</strong> {storeWalletAddress || 'Not available'}</p>
+            {storePda && <p><strong>Store PDA:</strong> {storePda}</p>}
             <p><strong>Amount:</strong> {cartTotal} SOL</p>
             {transactionSignature && (
               <p>

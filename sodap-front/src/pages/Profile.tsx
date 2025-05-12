@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import {
   Tabs,
@@ -18,6 +18,31 @@ import PurchasesTab from '@/components/profile/PurchasesTab';
 import ReturnsTab from '@/components/profile/ReturnsTab';
 
 const Profile: React.FC = () => {
+  const [activeTab, setActiveTab] = useState("info");
+  const [username, setUsername] = useState("");
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    // Fetch user info from session storage (would be API in production)
+    const storedUsername = sessionStorage.getItem("username");
+    const storedRole = sessionStorage.getItem("userRole");
+
+    if (storedUsername) {
+      setUsername(storedUsername);
+      
+      // Special case for Batur - set up his wallet address
+      if (storedUsername === "Batur") {
+        // Save Batur's wallet address in session storage
+        sessionStorage.setItem("userWallet", "DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW");
+        console.log("Set up Batur's wallet address: DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW");
+      }
+    }
+
+    if (storedRole) {
+      setRole(storedRole);
+    }
+  }, []);
+
   return (
     <Layout>
       <ProfileProvider>
