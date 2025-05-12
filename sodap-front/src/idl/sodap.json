@@ -146,6 +146,59 @@
       ]
     },
     {
+      "name": "create_user_wallet",
+      "discriminator": [
+        86,
+        213,
+        225,
+        48,
+        56,
+        62,
+        72,
+        148
+      ],
+      "accounts": [
+        {
+          "name": "user_profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  115,
+                  101,
+                  114,
+                  95,
+                  119,
+                  97,
+                  108,
+                  108,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "deactivate_product",
       "discriminator": [
         94,
@@ -803,10 +856,6 @@
       ],
       "args": [
         {
-          "name": "store_id",
-          "type": "pubkey"
-        },
-        {
           "name": "name",
           "type": "string"
         },
@@ -1178,6 +1227,19 @@
         30,
         26
       ]
+    },
+    {
+      "name": "UserProfile",
+      "discriminator": [
+        32,
+        37,
+        119,
+        205,
+        179,
+        180,
+        13,
+        194
+      ]
     }
   ],
   "events": [
@@ -1341,53 +1403,178 @@
   "errors": [
     {
       "code": 6000,
-      "name": "Unauthorized",
-      "msg": "Unauthorized access"
+      "name": "InvalidPrice",
+      "msg": "Invalid price"
     },
     {
       "code": 6001,
-      "name": "InsufficientPayment",
-      "msg": "Insufficient payment amount"
+      "name": "InvalidStock",
+      "msg": "Invalid stock"
     },
     {
       "code": 6002,
-      "name": "InvalidCart",
-      "msg": "Invalid cart data"
+      "name": "OutOfStock",
+      "msg": "Product is out of stock"
     },
     {
       "code": 6003,
+      "name": "InsufficientPayment",
+      "msg": "Insufficient payment"
+    },
+    {
+      "code": 6004,
+      "name": "StockUnderflow",
+      "msg": "Stock underflow"
+    },
+    {
+      "code": 6005,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6006,
+      "name": "CartEmpty",
+      "msg": "Cart is empty"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidCart",
+      "msg": "Invalid cart (mismatched product and quantity arrays)"
+    },
+    {
+      "code": 6008,
       "name": "ProductNotFound",
       "msg": "Product not found"
     },
     {
-      "code": 6004,
+      "code": 6009,
       "name": "InsufficientStock",
       "msg": "Insufficient stock"
     },
     {
-      "code": 6005,
+      "code": 6010,
+      "name": "PriceOverflow",
+      "msg": "Price overflow when summing cart"
+    },
+    {
+      "code": 6011,
+      "name": "CartTooLarge",
+      "msg": "Cart too large"
+    },
+    {
+      "code": 6012,
+      "name": "AdminAlreadyExists",
+      "msg": "Admin already exists"
+    },
+    {
+      "code": 6013,
+      "name": "CannotRemoveOwner",
+      "msg": "Cannot remove owner"
+    },
+    {
+      "code": 6014,
+      "name": "StoreNotFound",
+      "msg": "Store not found"
+    },
+    {
+      "code": 6015,
+      "name": "UnauthorizedStoreAccess",
+      "msg": "Unauthorized store access"
+    },
+    {
+      "code": 6016,
+      "name": "AdminNotFound",
+      "msg": "Admin not found"
+    },
+    {
+      "code": 6017,
+      "name": "UserNotFound",
+      "msg": "User not found"
+    },
+    {
+      "code": 6018,
       "name": "ArithmeticError",
       "msg": "Arithmetic error"
     },
     {
-      "code": 6006,
-      "name": "InsufficientEscrowBalance",
-      "msg": "Insufficient escrow balance"
+      "code": 6019,
+      "name": "InvalidStoreId",
+      "msg": "Invalid store ID"
     },
     {
-      "code": 6007,
-      "name": "InvalidMint",
-      "msg": "Invalid mint"
+      "code": 6020,
+      "name": "InvalidProductId",
+      "msg": "Invalid product ID"
     },
     {
-      "code": 6008,
+      "code": 6021,
+      "name": "InvalidAdminId",
+      "msg": "Invalid admin ID"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidLoyaltyConfig",
+      "msg": "Invalid loyalty configuration"
+    },
+    {
+      "code": 6023,
+      "name": "StoreInactive",
+      "msg": "Store is inactive"
+    },
+    {
+      "code": 6024,
       "name": "InsufficientLoyaltyPoints",
       "msg": "Insufficient loyalty points"
     },
     {
-      "code": 6009,
-      "name": "InvalidRedemption",
-      "msg": "Invalid redemption"
+      "code": 6025,
+      "name": "LoyaltyProgramInactive",
+      "msg": "Loyalty program is inactive"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidParameters",
+      "msg": "Invalid parameters"
+    },
+    {
+      "code": 6027,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidMetadataUri",
+      "msg": "Invalid metadata URI"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidAdminRole",
+      "msg": "Invalid admin role"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidStore",
+      "msg": "Invalid store"
+    },
+    {
+      "code": 6031,
+      "name": "EscrowNotFound",
+      "msg": "Escrow account not found"
+    },
+    {
+      "code": 6032,
+      "name": "LoyaltyMintNotFound",
+      "msg": "Loyalty mint not found"
+    },
+    {
+      "code": 6033,
+      "name": "InvalidLoyaltyPoints",
+      "msg": "Invalid loyalty points"
+    },
+    {
+      "code": 6034,
+      "name": "TransferHookError",
+      "msg": "Transfer hook error"
     }
   ],
   "types": [
@@ -1886,6 +2073,34 @@
           {
             "name": "updated_at",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserProfile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "user_id",
+            "type": "string"
+          },
+          {
+            "name": "delivery_address",
+            "type": "string"
+          },
+          {
+            "name": "preferred_store",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_purchases",
+            "type": "u64"
           }
         ]
       }

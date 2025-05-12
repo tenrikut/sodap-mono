@@ -1,10 +1,10 @@
 use crate::error::CustomError;
-use crate::state::admin::PlatformAdmins;
+//use crate::state::admin::PlatformAdmins;
 use crate::state::admin::{
     AddPlatformAdmin, PlatformAdminAdded, PlatformAdminRemoved, RemovePlatformAdmin,
 };
 
-use crate::utils::{check_root_password, is_super_root_admin};
+use crate::utils::auth::{check_root_password, is_super_root_admin};
 use anchor_lang::prelude::*;
 
 pub fn add_platform_admin(

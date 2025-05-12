@@ -16,7 +16,6 @@ mod instructions;
 mod state;
 mod types;
 
-pub use utils::pda::*;
 pub use crate::instructions::user_wallet::CreateUserWallet;
 
 // Define ProductAttribute type since it's not found in types.rs
