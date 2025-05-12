@@ -43,7 +43,7 @@ interface CartItem {
 const SOLANA_NETWORK =
   import.meta.env.VITE_SOLANA_NETWORK ||
   process.env.REACT_APP_SOLANA_NETWORK ||
-  "http://localhost:8999"; // Changed to use port 8999
+  "https://api.devnet.solana.com"; // Default to Devnet if no network is specified
 
 /**
  * Create a purchase transaction for the cart
@@ -60,37 +60,12 @@ export const createPurchaseTransaction = async (
   // Create a new transaction
   const transaction = new Transaction();
 
-  // Check if we're in development mode
-  const isDevelopmentMode = process.env.NODE_ENV === "development";
-
   try {
     // Validate inputs
     if (!connection) throw new Error("Connection not established");
     if (!program) throw new Error("Program not initialized");
     if (!walletPublicKey) throw new Error("Wallet public key not provided");
     if (!storeId) throw new Error("Store ID not provided");
-
-    // In development mode, create a simulated transaction
-    if (isDevelopmentMode) {
-      console.log("Creating simulated transaction for development mode");
-
-      // Add a simple transfer instruction as a placeholder
-      transaction.add(
-        SystemProgram.transfer({
-          fromPubkey: walletPublicKey,
-          toPubkey: new PublicKey("11111111111111111111111111111111"), // Dummy recipient
-          lamports: 1, // Minimal amount for simulation
-        })
-      );
-
-      // Add recent blockhash
-      transaction.recentBlockhash = (
-        await connection.getLatestBlockhash()
-      ).blockhash;
-      transaction.feePayer = walletPublicKey;
-
-      return transaction;
-    }
 
     // For production mode, create a real transaction
     console.log(
@@ -159,21 +134,8 @@ export const sendTransaction = async (
   connection: Connection
 ): Promise<string> => {
   try {
-    // Check if we're in development mode
-    const isDevelopmentMode = process.env.NODE_ENV === "development";
-
-    if (isDevelopmentMode) {
-      console.log("Development mode: Simulating transaction send");
-
-      // Generate a fake transaction signature for development mode
-      const fakeSignature = "SIM" + Math.random().toString(36).substring(2, 15);
-
-      // Simulate a delay to mimic network latency
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("Simulated transaction sent with signature:", fakeSignature);
-      return fakeSignature;
-    }
+    // Log that we're sending a real transaction to the network
+    console.log("Sending real transaction to the Solana network");
 
     // For production mode, get the wallet from window.phantom.solana
     const wallet = window.phantom?.solana;

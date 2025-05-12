@@ -5,37 +5,81 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-// Mock product data - would be replaced with actual API calls
-const mockProducts = [
-  {
-    id: '1',
-    name: 'SoDap T-Shirt',
-    price: 0.05,
-    image: 'https://placehold.co/300x300?text=SoDap+Shirt',
-    description: 'Comfortable cotton T-shirt with SoDap logo'
-  },
-  {
-    id: '2',
-    name: 'SoDap Mug',
-    price: 0.02,
-    image: 'https://placehold.co/300x300?text=SoDap+Mug',
-    description: 'Ceramic mug with SoDap logo'
-  },
-  {
-    id: '3',
-    name: 'SoDap Cap',
-    price: 0.03,
-    image: 'https://placehold.co/300x300?text=SoDap+Cap',
-    description: 'Adjustable cap with SoDap logo'
-  },
-  {
-    id: '4',
-    name: 'SoDap Stickers',
-    price: 0.01,
-    image: 'https://placehold.co/300x300?text=SoDap+Stickers',
-    description: 'Set of 5 SoDap logo stickers'
+// Function to get products based on store ID
+const getProductsByStore = (storeId: string) => {
+  // Products for Sodap Watch Store (store id: 5)
+  if (storeId === '5') {
+    return [
+      {
+        id: '501',
+        name: 'Rolex Submariner',
+        price: 3.99,
+        image: '/images/Rolex .png',
+        description: 'Iconic diving watch with unidirectional rotating bezel and water resistance up to 300 meters'
+      },
+      {
+        id: '502',
+        name: 'Omega Speedmaster "Moonwatch"',
+        price: 2.99,
+        image: '/images/omega.png',
+        description: 'The first watch worn on the moon with manual-winding chronograph movement'
+      },
+      {
+        id: '503',
+        name: 'Patek Philippe Nautilus 5711/1A',
+        price: 1.99,
+        image: '/images/patek-philippe.png',
+        description: 'Luxury sports watch with distinctive porthole-shaped case design'
+      },
+      {
+        id: '504',
+        name: 'Seiko',
+        price: 1.5,
+        image: '/images/seiko.png',
+        description: 'Reliable Japanese timepiece known for its quality craftsmanship and durability'
+      },
+      {
+        id: '505',
+        name: 'TAG Heuer Carrera Calibre',
+        price: 16,
+        image: '/images/tag.png',
+        description: 'Racing-inspired chronograph watch with sophisticated movement and elegant design'
+      }
+    ];
   }
-];
+
+  // Default products for other stores
+  return [
+    {
+      id: '1',
+      name: 'SoDap T-Shirt',
+      price: 0.05,
+      image: 'https://placehold.co/300x300?text=SoDap+Shirt',
+      description: 'Comfortable cotton T-shirt with SoDap logo'
+    },
+    {
+      id: '2',
+      name: 'SoDap Mug',
+      price: 0.02,
+      image: 'https://placehold.co/300x300?text=SoDap+Mug',
+      description: 'Ceramic mug with SoDap logo'
+    },
+    {
+      id: '3',
+      name: 'SoDap Cap',
+      price: 0.03,
+      image: 'https://placehold.co/300x300?text=SoDap+Cap',
+      description: 'Adjustable cap with SoDap logo'
+    },
+    {
+      id: '4',
+      name: 'SoDap Stickers',
+      price: 0.01,
+      image: 'https://placehold.co/300x300?text=SoDap+Stickers',
+      description: 'Set of 5 SoDap logo stickers'
+    }
+  ];
+};
 
 // Mock stores
 const mockStores = [
@@ -43,6 +87,7 @@ const mockStores = [
   { id: '2', name: 'Digital Collectibles' },
   { id: '3', name: 'Crypto Merchandise' },
   { id: '4', name: 'Blockchain Apparel' },
+  { id: '5', name: 'Sodap Watch Store' },
 ];
 
 const Shop: React.FC = () => {
@@ -57,13 +102,61 @@ const Shop: React.FC = () => {
     }
   };
 
+  // State for products based on selected store
+  const [storeProducts, setStoreProducts] = useState<Array<{
+    id: string;
+    name: string;
+    price: number;
+    image: string;
+    description: string;
+  }>>([]);
+
   // State for cart
-  const [cart, setCart] = useState<Array<{ product: typeof mockProducts[0]; quantity: number }>>(initialCart);
+  const [cart, setCart] = useState<Array<{ 
+    product: {
+      id: string;
+      name: string;
+      price: number;
+      image: string;
+      description: string;
+    }; 
+    quantity: number 
+  }>>(initialCart);
   const [currentStore, setCurrentStore] = useState<{ id: string; name: string } | null>(null);
   const [username, setUsername] = useState<string>('User');
   
+  // Calculate subtotal from cart items
+  const subtotal = cart.reduce(
+    (total, item) => total + item.product.price * item.quantity,
+    0
+  );
+  
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Function to navigate to payment page
+  const navigateToPayment = () => {
+    console.log(
+      "Navigating to payment page with cart total:",
+      subtotal.toFixed(3)
+    );
+    // Save cart details for the payment page
+    sessionStorage.setItem("cartTotal", subtotal.toFixed(3));
+    
+    // Get the store ID from the URL
+    const params = new URLSearchParams(location.search);
+    const storeId = params.get('store');
+    
+    // Navigate to payment page with the store ID
+    if (storeId) {
+      // Also save to session storage as backup
+      sessionStorage.setItem("selectedStoreId", storeId);
+      navigate(`/payment?storeId=${storeId}`);
+    } else {
+      navigate("/payment");
+    }
+  };
+  
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -87,6 +180,8 @@ const Shop: React.FC = () => {
     const store = mockStores.find(s => s.id === storeId);
     if (store) {
       setCurrentStore(store);
+      // Load products for this store
+      setStoreProducts(getProductsByStore(storeId));
     } else {
       // If store not found, redirect to store selection
       navigate('/store-selection');
@@ -99,7 +194,13 @@ const Shop: React.FC = () => {
   }, [location.search, navigate]);
   
   // Add to cart function
-  const addToCart = (product: typeof mockProducts[0]) => {
+  const addToCart = (product: {
+    id: string;
+    name: string;
+    price: number;
+    image: string;
+    description: string;
+  }) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.product.id === product.id);
       
@@ -152,7 +253,7 @@ const Shop: React.FC = () => {
         
         {/* Product Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockProducts.map(product => (
+          {storeProducts.map(product => (
             <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               <div className="h-48 overflow-hidden">
                 <img 

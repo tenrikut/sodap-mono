@@ -29,12 +29,33 @@ export const SodapAnchorProvider: React.FC<{ children: React.ReactNode }> = ({
     const initConnection = async () => {
       try {
         // Use environment variables with fallbacks
-        const endpoint =
+        let endpoint =
           import.meta.env.VITE_SOLANA_NETWORK ||
-          process.env.REACT_APP_SOLANA_NETWORK ||
-          (process.env.NODE_ENV === "development"
-            ? "http://localhost:8999"
-            : clusterApiUrl("devnet"));
+          process.env.REACT_APP_SOLANA_NETWORK;
+
+        // If no environment variable is set, use Devnet by default
+        if (!endpoint) {
+          // Always default to Devnet for consistency
+          endpoint = clusterApiUrl("devnet");
+          console.log("No network specified, defaulting to Solana Devnet");
+        } else if (
+          !/^https?:\/\//i.test(endpoint) &&
+          endpoint !== "devnet" &&
+          endpoint !== "testnet" &&
+          endpoint !== "mainnet-beta"
+        ) {
+          // Add http:// prefix if the endpoint doesn't start with http:// or https:// and isn't a network name
+          endpoint = `http://${endpoint}`;
+          console.log("Adding http:// prefix to endpoint:", endpoint);
+        } else if (
+          endpoint === "devnet" ||
+          endpoint === "testnet" ||
+          endpoint === "mainnet-beta"
+        ) {
+          // Handle network names
+          endpoint = clusterApiUrl(endpoint);
+          console.log(`Using Solana ${endpoint} network`);
+        }
 
         console.log("Connecting to Solana at:", endpoint);
         const connection = new Connection(endpoint, "confirmed");

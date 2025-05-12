@@ -35,9 +35,12 @@ const PaymentContent: React.FC = () => {
     string | null
   >(null);
 
-  // Store ID - In a real app, this would come from the store selection or context
-  // For this implementation, we're using a placeholder that would be replaced with a real store ID
-  const STORE_ID = "4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv"; // Replace with actual store ID
+  // Get the store ID from the URL params or session storage
+  // This ensures we're making transactions for the selected store
+  const [storeId, setStoreId] = useState<string>(
+    // Default store ID if none is found
+    "4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv"
+  );
 
   useEffect(() => {
     // Get cart total from session storage
@@ -57,7 +60,22 @@ const PaymentContent: React.FC = () => {
       navigate("/cart");
       return;
     }
-  }, [navigate, walletAddress, cartItems]);
+    
+    // Get store ID from URL params or session storage
+    const params = new URLSearchParams(window.location.search);
+    const storeIdParam = params.get("storeId");
+    const storedStoreId = sessionStorage.getItem("selectedStoreId");
+    
+    if (storeIdParam) {
+      setStoreId(storeIdParam);
+      console.log("Using store ID from URL params:", storeIdParam);
+    } else if (storedStoreId) {
+      setStoreId(storedStoreId);
+      console.log("Using store ID from session storage:", storedStoreId);
+    } else {
+      console.log("No store ID found, using default ID:", storeId);
+    }
+  }, [navigate, walletAddress, cartItems, storeId]);
 
   useEffect(() => {
     // Check if we're in development mode
@@ -194,22 +212,34 @@ const PaymentContent: React.FC = () => {
       }
 
       try {
+        console.log(`Creating purchase transaction for store: ${storeId}`);
+        console.log(`Total amount: ${subtotal} SOL`);
+        console.log(`Using wallet: ${walletPublicKey.toString()}`);
+        
         const transaction = await createPurchaseTransaction(
           cartItems,
           subtotal,
-          STORE_ID,
+          storeId,
           connection,
           program,
           walletPublicKey
         );
 
-        // Send the transaction
-        toast.info("Sending transaction to Solana network...");
+        // Send the transaction to Devnet
+        toast.info("Sending transaction to Solana Devnet...");
         const signature = await sendTransaction(transaction, connection);
         setTransactionSignature(signature);
 
+        // Show success message with explorer link
+        const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
         toast.success(
-          "Payment successful! Transaction signature: " + signature
+          <div>
+            Payment successful!<br/>
+            <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="underline text-blue-500">
+              View transaction on Solana Explorer
+            </a>
+          </div>,
+          { duration: 10000 }
         );
 
         // Clear the cart after successful payment
@@ -237,7 +267,19 @@ const PaymentContent: React.FC = () => {
               "Transaction was rejected. Please try again and approve the transaction.";
           } else if (error.message.includes("insufficient funds")) {
             errorMessage =
-              "Insufficient funds in your wallet to complete this transaction.";
+              "Insufficient funds in your wallet to complete this transaction. You can get free SOL from the Solana Devnet faucet.";
+            
+            // Add a link to the Solana Devnet faucet
+            toast.error(
+              <div>
+                {errorMessage}<br/>
+                <a href="https://faucet.solana.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-500">
+                  Get free Devnet SOL
+                </a>
+              </div>,
+              { duration: 10000 }
+            );
+            return; // Early return to avoid double toast
           } else if (
             error.message.includes("Cannot read properties of undefined")
           ) {
@@ -248,6 +290,17 @@ const PaymentContent: React.FC = () => {
           ) {
             errorMessage =
               "Transaction failed: The store program doesn't support this transaction type.";
+          } else if (
+            error.message.includes("AccountNotFound") ||
+            error.message.includes("Account does not exist")
+          ) {
+            errorMessage =
+              "The store account does not exist on Devnet. Please make sure the store is properly initialized.";
+          } else if (
+            error.message.includes("custom program error")
+          ) {
+            errorMessage =
+              "Smart contract error. This could be due to incorrect program ID or the store not being properly initialized.";
           } else {
             errorMessage = `Payment failed: ${error.message}`;
           }
@@ -306,6 +359,31 @@ const PaymentContent: React.FC = () => {
         onContinue={handleCloseSuccessDialog}
         transactionSignature={transactionSignature}
       />
+      
+      {/* Debug info - only visible in development mode */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-8 border border-gray-300 rounded-md p-4 bg-gray-50 text-xs">
+          <h3 className="font-semibold mb-2">Devnet Transaction Details:</h3>
+          <div className="space-y-1">
+            <p><strong>Store ID:</strong> {storeId}</p>
+            <p><strong>Wallet:</strong> {walletAddress || 'Not connected'}</p>
+            <p><strong>Amount:</strong> {cartTotal} SOL</p>
+            {transactionSignature && (
+              <p>
+                <strong>Signature:</strong> {transactionSignature.substring(0, 8)}...{transactionSignature.substring(transactionSignature.length - 8)}
+                <a 
+                  href={`https://explorer.solana.com/tx/${transactionSignature}?cluster=devnet`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="ml-2 underline text-blue-500"
+                >
+                  View on Explorer
+                </a>
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
