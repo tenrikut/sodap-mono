@@ -1,9 +1,3 @@
-It seems you're looking for more specific details about the **Program Derived Address (PDA)** functionality for stores in this repository. Let me adjust the README to focus on PDAs for stores instead of custom SPL tokens in the loyalty system. I will emphasize how PDAs are used for store management.
-
----
-
-## README Template (Updated for PDA Focus)
-
 # SoDap - Solana Decentralized Shopping Platform
 
 <div align="center">
