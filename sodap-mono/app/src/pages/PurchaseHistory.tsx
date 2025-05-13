@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
-import { usePurchaseHistory } from '../hooks/usePurchaseHistory';
-import { useAnchor } from '../hooks/useAnchor';
-import { Card } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
-import { Textarea } from '../components/ui/textarea';
-import { useReturnRequests } from '../hooks/useReturnRequests';
-import { toast } from 'sonner';
+import React, { useState } from "react";
+import { usePurchaseHistory } from "../hooks/usePurchaseHistory";
+import { useAnchor } from "../hooks/useAnchor";
+import { Card } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../components/ui/dialog";
+import { Textarea } from "../components/ui/textarea";
+import { useReturnRequests } from "../hooks/useReturnRequests";
+import { toast } from "sonner";
 
 export default function PurchaseHistory() {
   const { purchases, isLoading, error } = usePurchaseHistory();
   const { walletAddress } = useAnchor();
   const { createReturnRequest } = useReturnRequests();
-  
+
   // State for return request dialog
-  const [selectedPurchase, setSelectedPurchase] = useState<typeof purchases[0] | null>(null);
-  const [returnReason, setReturnReason] = useState('');
+  const [selectedPurchase, setSelectedPurchase] = useState<
+    (typeof purchases)[0] | null
+  >(null);
+  const [returnReason, setReturnReason] = useState("");
 
   if (!walletAddress) {
     return (
@@ -58,14 +66,18 @@ export default function PurchaseHistory() {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold">{purchase.storeName}</h3>
-                <p className="text-gray-500">{new Date(purchase.date).toLocaleDateString()}</p>
+                <p className="text-gray-500">
+                  {new Date(purchase.date).toLocaleDateString()}
+                </p>
               </div>
               <div className="text-right">
                 <p className="font-semibold">{purchase.totalAmount} SOL</p>
-                <p className="text-sm text-gray-500">Tx: {purchase.transactionSignature.slice(0, 8)}...</p>
+                <p className="text-sm text-gray-500">
+                  Tx: {purchase.transactionSignature.slice(0, 8)}...
+                </p>
                 {!purchase.isReturned && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     size="sm"
                     className="mt-2"
                     onClick={() => setSelectedPurchase(purchase)}
@@ -86,7 +98,9 @@ export default function PurchaseHistory() {
                 <div className="space-y-2">
                   {purchase.items.map((item, index) => (
                     <div key={index} className="flex justify-between text-sm">
-                      <span>{item.name} × {item.quantity}</span>
+                      <span>
+                        {item.name} × {item.quantity}
+                      </span>
                       <span>{item.price} SOL</span>
                     </div>
                   ))}
@@ -98,15 +112,18 @@ export default function PurchaseHistory() {
       </div>
 
       {/* Return Request Dialog */}
-      <Dialog open={!!selectedPurchase} onOpenChange={() => {
-        setSelectedPurchase(null);
-        setReturnReason('');
-      }}>
+      <Dialog
+        open={!!selectedPurchase}
+        onOpenChange={() => {
+          setSelectedPurchase(null);
+          setReturnReason("");
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Request Return</DialogTitle>
           </DialogHeader>
-          
+
           {selectedPurchase && (
             <div className="space-y-4">
               <div>
@@ -114,7 +131,9 @@ export default function PurchaseHistory() {
                 <div className="space-y-2">
                   {selectedPurchase.items.map((item, index) => (
                     <div key={index} className="flex justify-between text-sm">
-                      <span>{item.name} × {item.quantity}</span>
+                      <span>
+                        {item.name} × {item.quantity}
+                      </span>
                       <span>{item.price} SOL</span>
                     </div>
                   ))}
@@ -122,7 +141,10 @@ export default function PurchaseHistory() {
               </div>
 
               <div>
-                <label htmlFor="reason" className="text-sm font-semibold block mb-2">
+                <label
+                  htmlFor="reason"
+                  className="text-sm font-semibold block mb-2"
+                >
                   Reason for Return
                 </label>
                 <Textarea
@@ -139,7 +161,7 @@ export default function PurchaseHistory() {
                   variant="outline"
                   onClick={() => {
                     setSelectedPurchase(null);
-                    setReturnReason('');
+                    setReturnReason("");
                   }}
                 >
                   Cancel
@@ -147,7 +169,7 @@ export default function PurchaseHistory() {
                 <Button
                   onClick={async () => {
                     if (!returnReason.trim()) {
-                      toast.error('Please provide a reason for the return');
+                      toast.error("Please provide a reason for the return");
                       return;
                     }
 
@@ -157,26 +179,37 @@ export default function PurchaseHistory() {
                         id: selectedPurchase.id,
                         storeName: selectedPurchase.storeName,
                         items: selectedPurchase.items,
-                        transactionSignature: selectedPurchase.transactionSignature
+                        transactionSignature:
+                          selectedPurchase.transactionSignature,
                       };
-                      
-                      console.log('Creating return request for purchase:', purchaseData);
-                      const request = await createReturnRequest(purchaseData, returnReason);
-                      console.log('Return request created:', request);
-                      
+
+                      console.log(
+                        "Creating return request for purchase:",
+                        purchaseData
+                      );
+                      const request = await createReturnRequest(
+                        purchaseData,
+                        returnReason
+                      );
+                      console.log("Return request created:", request);
+
                       // Verify the request was saved
-                      const savedRequests = sessionStorage.getItem('returnRequests');
-                      console.log('Current return requests in storage:', savedRequests);
+                      const savedRequests =
+                        sessionStorage.getItem("returnRequests");
+                      console.log(
+                        "Current return requests in storage:",
+                        savedRequests
+                      );
 
                       // Close the dialog
                       setSelectedPurchase(null);
-                      setReturnReason('');
-                      
+                      setReturnReason("");
+
                       // Show success message
-                      toast.success('Return request submitted successfully');
+                      toast.success("Return request submitted successfully");
                     } catch (error) {
-                      console.error('Error creating return request:', error);
-                      toast.error('Failed to submit return request');
+                      console.error("Error creating return request:", error);
+                      toast.error("Failed to submit return request");
                     }
                   }}
                 >

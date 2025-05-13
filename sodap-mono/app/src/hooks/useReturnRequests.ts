@@ -81,10 +81,8 @@ export const useReturnRequests = () => {
       setReturnRequests(updated);
       
       // Dispatch custom event
-      console.log('Dispatching returnRequestsUpdated event');
-      window.dispatchEvent(new CustomEvent('returnRequestsUpdated', {
-        detail: { requests: updated }
-      }));
+      console.log('Dispatching refundRequestUpdate event');
+      window.dispatchEvent(new CustomEvent('refundRequestUpdate'));
 
       // Show success message
       toast.success('Return request submitted successfully');
