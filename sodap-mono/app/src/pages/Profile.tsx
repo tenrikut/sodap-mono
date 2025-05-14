@@ -54,16 +54,16 @@ const Profile: React.FC = () => {
             </div>
           </div>
 
-          <Tabs defaultValue="profile" className="w-full">
+          <Tabs defaultValue="info" className="w-full">
             <TabsList className="mb-6">
-              <TabsTrigger value="profile">Profile Info</TabsTrigger>
+              <TabsTrigger value="info">Profile Info</TabsTrigger>
               <TabsTrigger value="rewards">Earn Rewards</TabsTrigger>
               <TabsTrigger value="wallet">My Wallet</TabsTrigger>
               <TabsTrigger value="purchases">Purchase History</TabsTrigger>
               <TabsTrigger value="returns">Return Requests</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="profile">
+            <TabsContent value="info">
               <ProfileInfoTab />
             </TabsContent>
             

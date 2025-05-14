@@ -338,19 +338,14 @@ const PaymentContent: React.FC = (): React.ReactElement => {
         // Add purchase to history with cart items
         await addNewPurchase({
           transactionSignature: signature,
-          receiptAddress: storeId,
-          storeAddress: storeWalletAddress,
-          buyerAddress: walletAddress?.toString() || "",
+          id: signature,
+          storeName: sessionStorage.getItem("selectedStoreName") || "Unknown Store",
           totalAmount: parseFloat(cartTotal),
-          timestamp: Math.floor(Date.now() / 1000),
-          confirmed: true,
           items: cartItems.map((item) => ({
             name: item.product.name,
             price: item.product.price,
             quantity: item.quantity,
           })),
-          storeName:
-            sessionStorage.getItem("selectedStoreName") || "Unknown Store",
           date: new Date().toISOString(),
         });
 

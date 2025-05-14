@@ -233,56 +233,32 @@ export const usePurchaseHistory = () => {
     }
   }, [program, walletAddress, connection, fetchSinglePurchase]);
 
-  // Function to add a new purchase after payment
-  const addNewPurchase = useCallback(
-    async (paymentResult: ExtendedPaymentResult): Promise<void> => {
-      console.log('Adding new purchase with data:', paymentResult);
-      if (!program || !walletAddress) {
-        console.error('Cannot add purchase: program or wallet not connected');
-        setError("Wallet not connected");
-        return;
+  const addNewPurchase = useCallback(async (purchaseData: Purchase): Promise<void> => {
+    console.log("Adding new purchase with data:", purchaseData);
+    if (!program || !walletAddress) {
+      console.error('Cannot add purchase: program or wallet not connected');
+      setError("Wallet not connected");
+      return;
+    }
+
+    // Update state and cache immediately
+    setPurchases(prev => [purchaseData, ...prev]);
+    const cachedPurchases = JSON.parse(sessionStorage.getItem("cachedPurchases") || "[]");
+    sessionStorage.setItem("cachedPurchases", JSON.stringify([purchaseData, ...cachedPurchases]));
+
+    try {
+      const fetchedPurchase = await fetchSinglePurchase(
+        purchaseData.transactionSignature,
+        purchaseData.transactionSignature
+      );
+      if (fetchedPurchase) {
+        setPurchases((prev) => [fetchedPurchase, ...prev]);
       }
-
-      // Create purchase from payment result immediately
-      const selectedStoreName = sessionStorage.getItem("selectedStoreName") || "Unknown Store";
-      const newPurchase: Purchase = {
-        id: paymentResult.transactionSignature,
-        storeName: selectedStoreName,
-        date: new Date().toISOString(),
-        items: [], // We don't have item details yet
-        totalAmount: paymentResult.totalAmount,
-        transactionSignature: paymentResult.transactionSignature
-      };
-
-      // Update state and cache immediately
-      const purchase: Purchase = {
-        id: paymentResult.transactionSignature,
-        storeName: paymentResult.storeName || sessionStorage.getItem("selectedStoreName") || "Unknown Store",
-        date: paymentResult.date || new Date().toISOString(),
-        items: paymentResult.items || [],
-        totalAmount: paymentResult.totalAmount,
-        transactionSignature: paymentResult.transactionSignature
-      };
-
-      setPurchases(prev => [purchase, ...prev]);
-      const cachedPurchases = JSON.parse(sessionStorage.getItem("cachedPurchases") || "[]");
-      sessionStorage.setItem("cachedPurchases", JSON.stringify([purchase, ...cachedPurchases]));
-
-      try {
-        const purchase = await fetchSinglePurchase(
-          paymentResult.receiptAddress,
-          paymentResult.transactionSignature
-        );
-        if (purchase) {
-          setPurchases((prev) => [purchase, ...prev]);
-        }
-      } catch (err) {
-        console.error("Error adding new purchase:", err);
-        toast.error("Failed to update purchase history");
-      }
-    },
-    [program, walletAddress, fetchSinglePurchase, setPurchases]
-  );
+    } catch (err) {
+      console.error("Error adding new purchase:", err);
+      toast.error("Failed to update purchase history");
+    }
+  }, [program, walletAddress, fetchSinglePurchase, setPurchases]);
 
   // Fetch real purchases when wallet is connected
   useEffect(() => {
@@ -293,6 +269,31 @@ export const usePurchaseHistory = () => {
       console.log('No wallet connected, skipping purchase fetch');
     }
   }, [walletAddress, fetchPurchases]);
+
+  // Update purchase status when a return request is created
+  useEffect(() => {
+    const handleRefundRequestUpdate = () => {
+      // Get return requests
+      const returnRequestsStr = sessionStorage.getItem('returnRequests');
+      if (!returnRequestsStr) return;
+
+      try {
+        const returnRequests = JSON.parse(returnRequestsStr);
+        // Mark purchases as returned if they have a return request
+        const updatedPurchases = purchases.map(purchase => ({
+          ...purchase,
+          isReturned: returnRequests.some(req => req.purchaseId === purchase.id)
+        }));
+        setPurchases(updatedPurchases);
+      } catch (err) {
+        console.error('Error updating purchase status:', err);
+      }
+    };
+
+    // Listen for return request updates
+    window.addEventListener('refundRequestUpdate', handleRefundRequestUpdate);
+    return () => window.removeEventListener('refundRequestUpdate', handleRefundRequestUpdate);
+  }, [purchases]);
 
   return {
     purchases,
