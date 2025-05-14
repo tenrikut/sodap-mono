@@ -31,6 +31,11 @@ export interface Purchase {
   items: PurchaseItem[];
   transactionSignature: string;
   totalAmount: number;
+  // Anchor required fields
+  receiptAddress: string;
+  storeAddress: string;
+  buyerAddress: string;
+  purchaseTimestamp: number;
 }
 
 export const usePurchaseHistory = () => {
@@ -112,6 +117,11 @@ export const usePurchaseHistory = () => {
           items: [], // We don't have item details yet
           totalAmount,
           transactionSignature: txSignature,
+          // Add Anchor required fields
+          receiptAddress: receiptAddress,
+          storeAddress: sessionStorage.getItem(`sodap-store-wallet-${selectedStoreName}`) || '',
+          buyerAddress: walletAddress.toString(),
+          purchaseTimestamp: tx.blockTime || Math.floor(Date.now() / 1000)
         };
 
         return purchase;
@@ -231,7 +241,7 @@ export const usePurchaseHistory = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [program, walletAddress, connection, fetchSinglePurchase]);
+  }, [program, walletAddress, connection, fetchSinglePurchase, setPurchases]);
 
   const addNewPurchase = useCallback(async (purchaseData: Purchase): Promise<void> => {
     console.log("Adding new purchase with data:", purchaseData);

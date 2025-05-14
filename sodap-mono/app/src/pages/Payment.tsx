@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { WALLET_CONFIG } from "@/config/wallets";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ import { PaymentDetailsCard } from "@/components/payment/PaymentDetailsCard";
 import { PaymentSuccessDialog } from "@/components/payment/PaymentSuccessDialog";
 import { useCart } from "@/hooks/useCart";
 import { usePurchaseHistory } from "@/hooks/usePurchaseHistory";
+import { useReturnRequests } from "@/hooks/useReturnRequests";
 import {
   PublicKey,
   Transaction,
@@ -34,6 +36,7 @@ const PaymentContent: React.FC = (): React.ReactElement => {
   } = useAnchor();
   const { cartItems } = useCart();
   const { addNewPurchase } = usePurchaseHistory();
+  const { createReturnRequest, refreshRequests } = useReturnRequests();
   const [isProcessing, setIsProcessing] = useState(false);
   const [cartTotal, setCartTotal] = useState("0");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -125,23 +128,27 @@ const PaymentContent: React.FC = (): React.ReactElement => {
     // Special case for Sodap Watch Store (ID: 5)
     // ALWAYS use these hardcoded values for this store to ensure it works
     if (selectedStoreId === "5") {
-      const fixedWalletAddress = "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J";
+      const fixedWalletAddress = WALLET_CONFIG.STORE_MANAGER;
       const fixedPdaAddress = "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo";
 
       setStoreWalletAddress(fixedWalletAddress);
       setStorePda(fixedPdaAddress);
 
-      // Save to session storage for consistency
+      // Save store wallet and PDA to session storage
       sessionStorage.setItem("selectedStoreWallet", fixedWalletAddress);
       sessionStorage.setItem("selectedStorePda", fixedPdaAddress);
 
-      console.log(
-        "Using fixed wallet for Sodap Watch Store:",
-        fixedWalletAddress
-      );
-      console.log("Using fixed PDA for Sodap Watch Store:", fixedPdaAddress);
+      // For Batur, ensure we're using the correct buyer wallet
+      const username = sessionStorage.getItem("username");
+      if (username === "Batur" && !sessionStorage.getItem("userWallet")) {
+        sessionStorage.setItem("userWallet", WALLET_CONFIG.DEFAULT_BUYER);
+        console.log("Set up Batur's wallet:", WALLET_CONFIG.DEFAULT_BUYER);
+      }
 
-      // Save to localStorage too for the admin dashboard
+      console.log("Using store wallet:", fixedWalletAddress);
+      console.log("Using store PDA:", fixedPdaAddress);
+
+      // Save to localStorage for the admin dashboard
       localStorage.setItem(
         "sodap-store-wallet-5",
         JSON.stringify({
@@ -173,13 +180,10 @@ const PaymentContent: React.FC = (): React.ReactElement => {
     if (username === "Batur") {
       // Create a user session for Batur if not already created
       if (!sessionStorage.getItem("userWallet")) {
-        sessionStorage.setItem(
-          "userWallet",
-          "DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW"
-        );
         sessionStorage.setItem("username", "Batur");
+        sessionStorage.setItem("userWallet", WALLET_CONFIG.DEFAULT_BUYER);
         console.log(
-          "Set up Batur's wallet address: DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW"
+          "Set up Batur's wallet address:", WALLET_CONFIG.DEFAULT_BUYER
         );
       }
     }
@@ -220,24 +224,11 @@ const PaymentContent: React.FC = (): React.ReactElement => {
       const selectedStoreId = sessionStorage.getItem("selectedStoreId");
       if (selectedStoreId === "5" && !storeWalletAddress) {
         // Use our updated wallet address for Sodap Watch Store if missing
-        const watchStoreWallet = "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J";
+        const watchStoreWallet = WALLET_CONFIG.STORE_MANAGER;
         setStoreWalletAddress(watchStoreWallet);
-        console.log(
-          "Using specific wallet address for Sodap Watch Store:",
-          watchStoreWallet
-        );
+        console.log("Using store manager wallet:", watchStoreWallet);
       }
 
-      // Check if we have a store wallet address
-      if (!storeWalletAddress) {
-        toast.error(
-          "Store wallet address not found! The store may not have a wallet configured."
-        );
-        setIsProcessing(false);
-        return;
-      }
-
-      // DIRECT APPROACH: Create a simple transaction
       try {
         // Convert the wallet and store addresses to PublicKeys
         const fromWalletPublicKey = new PublicKey(walletAddress || userWallet);
@@ -316,49 +307,63 @@ const PaymentContent: React.FC = (): React.ReactElement => {
           { duration: 10000 }
         );
 
-        // Clear the cart after successful payment
-        localStorage.setItem("cart", JSON.stringify([]));
-        window.dispatchEvent(new Event("cartUpdated"));
-
-        // Calculate loyalty points earned (1 point per 1 SOL spent)
-        const pointsEarned = Math.round(parseFloat(cartTotal));
-        setEarnedPoints(pointsEarned);
-
-        console.log("Payment successful, preparing to add to purchase history");
-        const purchaseData = {
-          transactionSignature: signature,
-          receiptAddress: toStorePublicKey.toString(),
-          storeAddress: storeWalletAddress,
-          buyerAddress: walletAddress,
-          totalAmount: parseFloat(cartTotal),
-          timestamp: new Date().toISOString(),
-        };
-        console.log("Purchase data:", purchaseData);
-
-        // Add purchase to history with cart items
-        await addNewPurchase({
-          transactionSignature: signature,
+        // Create purchase data
+        const purchase = {
           id: signature,
-          storeName: sessionStorage.getItem("selectedStoreName") || "Unknown Store",
-          totalAmount: parseFloat(cartTotal),
-          items: cartItems.map((item) => ({
-            name: item.product.name,
-            price: item.product.price,
-            quantity: item.quantity,
-          })),
+          transactionSignature: signature,
           date: new Date().toISOString(),
-        });
+          storeName: sessionStorage.getItem('selectedStoreName') || 'Unknown Store',
+          items: cartItems.map(item => ({
+            name: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price
+          })),
+          receiptAddress: signature,
+          storeAddress: storeWalletAddress,
+          buyerAddress: walletAddress || userWallet || WALLET_CONFIG.DEFAULT_BUYER,
+          purchaseTimestamp: Math.floor(Date.now() / 1000),
+          totalAmount: parseFloat(cartTotal)
+        };
 
-        // Clear cart after successful payment
-        sessionStorage.removeItem("cartItems");
-        sessionStorage.removeItem("cartTotal");
+        // Add purchase to history
+        await addNewPurchase(purchase);
+
+        // Calculate earned points (1 point per SOL)
+        const points = Math.floor(parseFloat(cartTotal));
+        setEarnedPoints(points);
+
+        // Save purchase data for potential refunds
+        sessionStorage.setItem('lastPurchase', JSON.stringify(purchase));
+
+        // Also save to purchases array
+        const existingPurchases = JSON.parse(sessionStorage.getItem('purchases') || '[]');
+        sessionStorage.setItem('purchases', JSON.stringify([purchase, ...existingPurchases]));
+
+        // Create a return request automatically
+        try {
+          // Wait a bit to ensure purchase data is saved
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Create return request
+          await createReturnRequest(
+            purchase,
+            'Automatically created for tracking purposes'
+          );
+
+          // Refresh the requests list
+          await refreshRequests();
+        } catch (error) {
+          console.error('Error creating return request:', error);
+          // Don't show error to user since this is automatic
+        }
 
         // Show success dialog
-        setTransactionSignature(signature);
         setShowSuccessDialog(true);
 
-        // Calculate and set earned points (1 point per SOL spent)
-        setEarnedPoints(Math.floor(parseFloat(cartTotal)));
+        // Clear cart
+        sessionStorage.removeItem("cartItems");
+        sessionStorage.removeItem("cartTotal");
+      sessionStorage.removeItem("cartTotal");
       } catch (err: unknown) {
         console.error("Payment error:", err);
         let errorMessage = "Payment failed: Unknown error";
@@ -547,9 +552,13 @@ const PaymentContent: React.FC = (): React.ReactElement => {
             </p>
             <p>
               <strong>User Wallet:</strong>{" "}
-              {walletAddress ||
-                sessionStorage.getItem("userWallet") ||
-                "Not connected"}
+              {sessionStorage.getItem("username") === "Batur" ? (
+                <span className="text-blue-500">
+                  {sessionStorage.getItem("userWallet")} (Batur)
+                </span>
+              ) : (
+                walletAddress || "Not connected"
+              )}
             </p>
             <p>
               <strong>Store Wallet:</strong>{" "}

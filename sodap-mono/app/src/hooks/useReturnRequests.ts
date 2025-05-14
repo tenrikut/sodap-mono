@@ -1,6 +1,22 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
+export interface Purchase {
+  id: string;
+  transactionSignature: string;
+  storeName: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+  receiptAddress: string;
+  storeAddress: string;
+  buyerAddress: string;
+  purchaseTimestamp: number;
+  totalAmount: number;
+}
+
 export interface ReturnRequest {
   id: string;
   purchaseId: string;
@@ -14,89 +30,77 @@ export interface ReturnRequest {
   status: 'Pending' | 'Approved' | 'Rejected';
   storeName: string;
   transactionSignature: string;
+  receiptAddress: string;
+  storeAddress: string;
+  buyerAddress: string;
+  purchaseTimestamp: number;
+  totalAmount: number;
 }
 
 export const useReturnRequests = () => {
   const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
 
-  // Load return requests from storage on mount
-  useEffect(() => {
+  const refreshRequests = useCallback(async () => {
     const storedRequests = sessionStorage.getItem('returnRequests');
     if (storedRequests) {
       setReturnRequests(JSON.parse(storedRequests));
     }
   }, []);
 
-  const createReturnRequest = useCallback(async (
-    purchase: {
-      id: string;
-      storeName: string;
-      items: Array<{ name: string; quantity: number; price: number }>;
-      transactionSignature: string;
-    },
-    reason: string
-  ) => {
-    console.log('createReturnRequest called with:', { purchase, reason });
+  useEffect(() => {
+    refreshRequests();
+  }, [refreshRequests]);
+
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'returnRequests') {
+        const newRequests = e.newValue ? JSON.parse(e.newValue) : [];
+        setReturnRequests(newRequests);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const createReturnRequest = useCallback(async (purchase: Purchase, reason: string) => {
     try {
-      // Create a new return request
       const newRequest: ReturnRequest = {
         id: `ret_${Math.random().toString(36).substring(2, 9)}`,
         purchaseId: purchase.id,
         date: new Date().toISOString(),
         items: purchase.items,
         reason,
-        status: 'Pending' as const,
+        status: 'Pending',
         storeName: purchase.storeName,
-        transactionSignature: purchase.transactionSignature
+        transactionSignature: purchase.transactionSignature,
+        receiptAddress: purchase.receiptAddress,
+        storeAddress: purchase.storeAddress,
+        buyerAddress: purchase.buyerAddress,
+        purchaseTimestamp: purchase.purchaseTimestamp,
+        totalAmount: purchase.totalAmount
       };
-      
-      console.log('Created new return request:', newRequest);
 
-      console.log('Saving new return request:', newRequest);
-      
-      // Get existing requests
       const existingRequestsStr = sessionStorage.getItem('returnRequests');
-      console.log('Raw existing requests from storage:', existingRequestsStr);
-      
-      let existingRequests = [];
-      try {
-        if (existingRequestsStr) {
-          existingRequests = JSON.parse(existingRequestsStr);
-          console.log('Parsed existing requests:', existingRequests);
-        }
-      } catch (err) {
-        console.error('Error parsing existing requests:', err);
-        // Initialize with empty array if parse fails
-        sessionStorage.setItem('returnRequests', '[]');
-      }
-      
-      // Add the new request
-      const updated = [newRequest, ...existingRequests];
-      console.log('Final updated requests array:', updated);
-      
-      // Store in session storage
-      sessionStorage.setItem('returnRequests', JSON.stringify(updated));
-      
-      // Update state
-      setReturnRequests(updated);
-      
-      // Dispatch custom event
-      console.log('Dispatching refundRequestUpdate event');
-      window.dispatchEvent(new CustomEvent('refundRequestUpdate'));
+      const existingRequests = existingRequestsStr ? JSON.parse(existingRequestsStr) : [];
 
-      // Show success message
+      const updatedRequests = [newRequest, ...existingRequests];
+      sessionStorage.setItem('returnRequests', JSON.stringify(updatedRequests));
+      setReturnRequests(updatedRequests);
+
       toast.success('Return request submitted successfully');
 
       return newRequest;
     } catch (error) {
       console.error('Error creating return request:', error);
-      toast.error('Failed to submit return request');
+      toast.error('Failed to create return request');
       throw error;
     }
   }, []);
 
   return {
     returnRequests,
-    createReturnRequest
+    createReturnRequest,
+    refreshRequests
   };
 };
