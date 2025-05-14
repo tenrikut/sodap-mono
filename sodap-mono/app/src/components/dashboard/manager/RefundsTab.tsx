@@ -3,6 +3,12 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { PublicKey } from '@solana/web3.js';
+import { useRefundTransaction } from '@/hooks/useRefundTransaction';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
 interface ReturnRequest {
   id: string;
@@ -23,27 +29,89 @@ const RefundsTab: React.FC = () => {
   const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
   const [selectedRequest, setSelectedRequest] = useState<ReturnRequest | null>(null);
   const [open, setOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Wallet connection
+  const { connected, publicKey } = useWallet();
+  const { processRefund } = useRefundTransaction();
+  
+  // Check if connected wallet is the store manager wallet
+  const isStoreManagerWallet = publicKey?.toBase58() === '9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J';
 
   const handleApproveRefund = async (request: ReturnRequest) => {
     try {
-      const storedRequests = sessionStorage.getItem('returnRequests');
-      if (!storedRequests) return;
-
-      const allRequests = JSON.parse(storedRequests);
-      const updatedRequests = allRequests.map(r =>
-        r.id === request.id ? { ...r, status: 'Approved' as const } : r
-      );
+      // Check wallet connection
+      if (!connected) {
+        toast.error('Please connect your wallet to process refunds');
+        return;
+      }
       
-      sessionStorage.setItem('returnRequests', JSON.stringify(updatedRequests));
-      const pendingRequests = updatedRequests.filter(r => r.status === 'Pending');
-      setReturnRequests(pendingRequests);
-      setSelectedRequest(null);
-      setOpen(false);
-      toast.success('Refund approved successfully');
-      window.dispatchEvent(new CustomEvent('refundRequestUpdate'));
+      // Check if the connected wallet is the store manager wallet
+      if (!isStoreManagerWallet) {
+        toast.error('Please connect with the store manager wallet');
+        return;
+      }
+      
+      setIsProcessing(true);
+      
+      // Get buyer's wallet - In a real implementation, this would come from your database
+      // For the demo, we'll use the first few bytes of the transaction signature as a dummy wallet
+      // In production, you'd need to query for the actual buyer's wallet from your database
+      let buyerWalletAddress;
+      try {
+        // For demo purposes, we're using a hardcoded wallet address
+        // In a real implementation, you would get this from your transaction data
+        buyerWalletAddress = new PublicKey('8uJAC3bMxqKDe472pE1QzD1QfoLcjkCnSPNcLgFcNkQs');
+        
+        console.log('Processing refund to buyer wallet:', buyerWalletAddress.toBase58());
+      } catch (error) {
+        console.error('Error extracting buyer wallet address:', error);
+        toast.error('Invalid buyer wallet address');
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Process the Solana refund transaction
+      try {
+        const result = await processRefund(request, buyerWalletAddress);
+        
+        console.log('Refund transaction result:', result);
+        
+        if (result.status === 'success') {
+          // Update the request status in session storage
+          const storedRequests = sessionStorage.getItem('returnRequests');
+          if (!storedRequests) return;
+
+          const allRequests = JSON.parse(storedRequests);
+          const updatedRequests = allRequests.map(r =>
+            r.id === request.id ? { 
+              ...r, 
+              status: 'Approved' as const,
+              refundSignature: result.signature 
+            } : r
+          );
+          
+          sessionStorage.setItem('returnRequests', JSON.stringify(updatedRequests));
+          const pendingRequests = updatedRequests.filter(r => r.status === 'Pending');
+          setReturnRequests(pendingRequests);
+          setSelectedRequest(null);
+          setOpen(false);
+          
+          toast.success('Refund processed successfully');
+          window.dispatchEvent(new CustomEvent('refundRequestUpdate'));
+        } else {
+          toast.error('Refund transaction failed');
+        }
+      } catch (error) {
+        console.error('Error processing refund transaction:', error);
+        toast.error('Refund transaction failed');
+      } finally {
+        setIsProcessing(false);
+      }
     } catch (error) {
       console.error('Error approving refund:', error);
       toast.error('Failed to approve refund');
+      setIsProcessing(false);
     }
   };
 
@@ -147,10 +215,33 @@ const RefundsTab: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Pending Refund Requests</h2>
-      
-      <div className="text-sm text-gray-500 mb-4">
-        Total pending requests: {returnRequests.length}
+      <div className="flex flex-col space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Pending Refund Requests</h2>
+          <WalletMultiButton />
+        </div>
+        
+        {!connected && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Wallet not connected</AlertTitle>
+            <AlertDescription>
+              Please connect your wallet to process refunds
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {connected && !isStoreManagerWallet && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTitle>Wrong wallet connected</AlertTitle>
+            <AlertDescription>
+              Please connect with the store manager wallet: 9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        <div className="text-sm text-gray-500 mb-4">
+          Total pending requests: {returnRequests.length}
+        </div>
       </div>
       
       {returnRequests.length === 0 ? (
@@ -218,8 +309,16 @@ const RefundsTab: React.FC = () => {
                         <Button
                           onClick={() => handleApproveRefund(request)}
                           className="bg-green-500 hover:bg-green-600"
+                          disabled={isProcessing || !connected || !isStoreManagerWallet}
                         >
-                          Approve
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            'Process Refund'
+                          )}
                         </Button>
                       </>
                     )}
@@ -276,8 +375,16 @@ const RefundsTab: React.FC = () => {
                 <Button
                   onClick={() => handleApproveRefund(selectedRequest)}
                   className="bg-green-500 hover:bg-green-600"
+                  disabled={isProcessing || !connected || !isStoreManagerWallet}
                 >
-                  Approve
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Process Refund'
+                  )}
                 </Button>
               </div>
             </div>

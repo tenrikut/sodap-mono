@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, Wallet, setProvider } from "@coral-xyz/anchor";
+import { Program, AnchorProvider, setProvider, Wallet } from "@coral-xyz/anchor";
 import {
   Connection,
   Keypair,
@@ -114,6 +114,8 @@ export const createAnchorProgram = (provider: AnchorProvider): Program<Sodap> =>
     setProvider(provider);
 
     // 2. Create program using only the IDL (which must include the address field)
+    // Create program using simplified v0.30+ constructor
+    // Note: IDL must include the program address
     const program = new Program<Sodap>(IDL);
 
     // Verify the program was created properly

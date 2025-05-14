@@ -11,7 +11,7 @@ import { toast } from "sonner";
 // Create a component that uses the profile context
 const CartContent: React.FC = () => {
   const navigate = useNavigate();
-  const { cartItems, setCartItems } = useCart();
+  const { cartItems, setCartItems, updateQuantity, removeItem } = useCart();
   const { walletAddress } = useAnchor();
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
@@ -19,7 +19,7 @@ const CartContent: React.FC = () => {
   const selectedStoreId = sessionStorage.getItem("selectedStoreId");
 
   // Calculate subtotal
-  const subtotal = cartItems.reduce((acc, item: CartItemType) => acc + item.product.price, 0);
+  const subtotal = cartItems.reduce((acc, item: CartItemType) => acc + (item.product.price * item.quantity), 0);
 
   // Function to navigate to store selection
   const navigateToStoreSelection = () => {
@@ -72,8 +72,8 @@ const CartContent: React.FC = () => {
               <CartItem
                 key={index}
                 item={item}
-                updateQuantity={(id: string, quantity: number) => {}}
-                removeItem={(id: string) => {}}
+                updateQuantity={updateQuantity}
+                removeItem={removeItem}
               />
             ))}
           </div>

@@ -1,4 +1,4 @@
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
+import { Program, AnchorProvider, setProvider } from "@coral-xyz/anchor";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import {
@@ -33,7 +33,12 @@ export function useAnchorProgram() {
 
       // Initialize the program
       // Initialize the program with the correct provider
-      const program = new Program<Idl>(IDL, provider);
+      // Set the provider globally
+      setProvider(provider);
+
+      // Initialize the program with just the IDL
+      // Note: IDL must include the program address
+      const program = new Program<Idl>(IDL);
       // Note: In newer versions of Anchor, the programId is expected to be in the IDL
       setProgram(program);
     } catch (error) {

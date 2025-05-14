@@ -266,17 +266,15 @@ const PaymentContent: React.FC = () => {
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = fromWalletPublicKey;
 
-        // Send transaction using Phantom wallet
-        if (!window.phantom?.solana) {
-          throw new Error("Phantom wallet not detected");
+        // Send transaction using wallet adapter
+        if (!program?.provider.wallet) {
+          throw new Error("Wallet not connected");
         }
 
         toast.info("Please approve the transaction in your wallet");
 
-        // Request signature from the user
-        const signedTransaction = await window.phantom.solana.signTransaction(
-          transaction
-        );
+        // Request signature from the user using wallet adapter
+        const signedTransaction = await program.provider.wallet.signTransaction(transaction);
 
         // Send the transaction to the network
         toast.info("Sending transaction to Solana network...");
@@ -355,13 +353,13 @@ const PaymentContent: React.FC = () => {
         let errorMessage = "Payment failed";
 
         if (error instanceof Error) {
-          if (error.message.includes("Non-base58")) {
+          if (error.message.includes("Non-base58") || error.message.includes("invalid public key")) {
             errorMessage =
               "Invalid wallet address format. Please reconnect your wallet.";
-          } else if (error.message.includes("User rejected")) {
+          } else if (error.message.includes("User rejected") || error.message.includes("was not approved")) {
             errorMessage =
               "Transaction was rejected. Please try again and approve the transaction.";
-          } else if (error.message.includes("insufficient funds")) {
+          } else if (error.message.includes("insufficient funds") || error.message.includes("insufficient lamports")) {
             errorMessage =
               "Insufficient funds in your wallet to complete this transaction. You can get free SOL from the Solana Devnet faucet.";
 
@@ -382,11 +380,8 @@ const PaymentContent: React.FC = () => {
               { duration: 10000 }
             );
             return; // Early return to avoid double toast
-          } else if (
-            error.message.includes("Cannot read properties of undefined")
-          ) {
-            errorMessage =
-              "Failed to initialize program properly. Please refresh the page and try again.";
+          } else if (error.message.includes("Cannot read properties of undefined") || error.message.includes("wallet not connected")) {
+            errorMessage = "Wallet connection error. Please reconnect your wallet and try again.";
           } else if (
             error.message.includes("Failed to create purchase instruction")
           ) {
