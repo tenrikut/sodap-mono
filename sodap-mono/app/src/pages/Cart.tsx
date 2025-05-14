@@ -60,7 +60,7 @@ const CartContent: React.FC = () => {
       {cartItems.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-500 mb-4">Your cart is empty</p>
-          <Button onClick={() => navigate("/")} variant="outline">
+          <Button onClick={() => navigate("/store-selection")} variant="outline">
             Continue Shopping
           </Button>
         </div>

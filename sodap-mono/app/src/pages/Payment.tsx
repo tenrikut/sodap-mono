@@ -34,7 +34,7 @@ const PaymentContent: React.FC = (): React.ReactElement => {
     connection,
     program,
   } = useAnchor();
-  const { cartItems } = useCart();
+  const { cartItems, setCartItems } = useCart();
   const { addNewPurchase } = usePurchaseHistory();
   const { createReturnRequest, refreshRequests } = useReturnRequests();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -352,6 +352,10 @@ const PaymentContent: React.FC = (): React.ReactElement => {
 
           // Refresh the requests list
           await refreshRequests();
+
+          // Clear the cart
+          setCartItems([]);
+          sessionStorage.removeItem('cartTotal');
         } catch (error) {
           console.error('Error creating return request:', error);
           // Don't show error to user since this is automatic
