@@ -13,7 +13,12 @@ import { PaymentDetailsCard } from "@/components/payment/PaymentDetailsCard";
 import { PaymentSuccessDialog } from "@/components/payment/PaymentSuccessDialog";
 import { useCart } from "@/hooks/useCart";
 import { usePurchaseHistory } from "@/hooks/usePurchaseHistory";
-import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 
 // Content component that uses the profile context
 const PaymentContent: React.FC = () => {
@@ -62,12 +67,12 @@ const PaymentContent: React.FC = () => {
       navigate("/cart");
       return;
     }
-    
+
     // Get store ID from URL params or session storage
     const params = new URLSearchParams(window.location.search);
     const storeIdParam = params.get("storeId");
     const storedStoreId = sessionStorage.getItem("selectedStoreId");
-    
+
     if (storeIdParam) {
       setStoreId(storeIdParam);
       console.log("Using store ID from URL params:", storeIdParam);
@@ -111,7 +116,7 @@ const PaymentContent: React.FC = () => {
   // Get store wallet address from session storage
   const [storeWalletAddress, setStoreWalletAddress] = useState<string>("");
   const [storePda, setStorePda] = useState<string>("");
-  
+
   useEffect(() => {
     // Get the current selected store ID
     const selectedStoreId = sessionStorage.getItem("selectedStoreId");
@@ -122,23 +127,29 @@ const PaymentContent: React.FC = () => {
     if (selectedStoreId === "5") {
       const fixedWalletAddress = "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J";
       const fixedPdaAddress = "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo";
-      
+
       setStoreWalletAddress(fixedWalletAddress);
       setStorePda(fixedPdaAddress);
-      
+
       // Save to session storage for consistency
       sessionStorage.setItem("selectedStoreWallet", fixedWalletAddress);
       sessionStorage.setItem("selectedStorePda", fixedPdaAddress);
-      
-      console.log("Using fixed wallet for Sodap Watch Store:", fixedWalletAddress);
+
+      console.log(
+        "Using fixed wallet for Sodap Watch Store:",
+        fixedWalletAddress
+      );
       console.log("Using fixed PDA for Sodap Watch Store:", fixedPdaAddress);
-      
+
       // Save to localStorage too for the admin dashboard
-      localStorage.setItem("sodap-store-wallet-5", JSON.stringify({
-        pub: fixedWalletAddress,
-        sec: "58cb156e8e089675e3ba385e8b0db1853a0a7fb39d4257030be4dca2964050dd", // Keep existing private key
-        pda: fixedPdaAddress
-      }));
+      localStorage.setItem(
+        "sodap-store-wallet-5",
+        JSON.stringify({
+          pub: fixedWalletAddress,
+          sec: "58cb156e8e089675e3ba385e8b0db1853a0a7fb39d4257030be4dca2964050dd", // Keep existing private key
+          pda: fixedPdaAddress,
+        })
+      );
     } else {
       // For other stores, use the saved wallet address
       const savedStoreWallet = sessionStorage.getItem("selectedStoreWallet");
@@ -148,7 +159,7 @@ const PaymentContent: React.FC = () => {
       } else {
         console.warn("No wallet address found for selected store");
       }
-      
+
       // Get store PDA from session storage
       const savedStorePda = sessionStorage.getItem("selectedStorePda");
       if (savedStorePda) {
@@ -156,25 +167,30 @@ const PaymentContent: React.FC = () => {
         console.log("Found store PDA address:", savedStorePda);
       }
     }
-    
+
     // Check for Batur's wallet when username is Batur
     const username = sessionStorage.getItem("username");
     if (username === "Batur") {
       // Create a user session for Batur if not already created
       if (!sessionStorage.getItem("userWallet")) {
-        sessionStorage.setItem("userWallet", "DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW");
+        sessionStorage.setItem(
+          "userWallet",
+          "DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW"
+        );
         sessionStorage.setItem("username", "Batur");
-        console.log("Set up Batur's wallet address: DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW");
+        console.log(
+          "Set up Batur's wallet address: DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW"
+        );
       }
     }
   }, []);
-  
+
   const handlePayment = async () => {
     try {
       // Check if we have Batur's wallet address when username is Batur
       const username = sessionStorage.getItem("username");
       const userWallet = sessionStorage.getItem("userWallet");
-      
+
       if (username === "Batur" && userWallet) {
         // Use Batur's wallet directly without connecting
         console.log("Using Batur's wallet for payment:", userWallet);
@@ -199,38 +215,43 @@ const PaymentContent: React.FC = () => {
         setIsProcessing(false);
         return;
       }
-      
+
       // For Sodap Watch Store (ID: 5), ensure we always have the correct wallet address
       const selectedStoreId = sessionStorage.getItem("selectedStoreId");
       if (selectedStoreId === "5" && !storeWalletAddress) {
         // Use our updated wallet address for Sodap Watch Store if missing
         const watchStoreWallet = "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J";
         setStoreWalletAddress(watchStoreWallet);
-        console.log("Using specific wallet address for Sodap Watch Store:", watchStoreWallet);
+        console.log(
+          "Using specific wallet address for Sodap Watch Store:",
+          watchStoreWallet
+        );
       }
-      
+
       // Check if we have a store wallet address
       if (!storeWalletAddress) {
-        toast.error("Store wallet address not found! The store may not have a wallet configured.");
+        toast.error(
+          "Store wallet address not found! The store may not have a wallet configured."
+        );
         setIsProcessing(false);
         return;
       }
-      
+
       // DIRECT APPROACH: Create a simple transaction
       try {
         // Convert the wallet and store addresses to PublicKeys
         const fromWalletPublicKey = new PublicKey(walletAddress || userWallet);
         const toStorePublicKey = new PublicKey(storeWalletAddress);
-        
+
         console.log("Creating direct SOL transfer transaction");
         console.log(`Amount: ${subtotal} SOL`);
         console.log(`From: ${fromWalletPublicKey.toString()}`);
         console.log(`To: ${toStorePublicKey.toString()}`);
-        
+
         // Calculate amount in lamports (1 SOL = 1,000,000,000 lamports)
         const lamports = Math.round(subtotal * LAMPORTS_PER_SOL);
         console.log(`Amount in lamports: ${lamports}`);
-        
+
         // Create a simple transfer transaction
         const transaction = new Transaction().add(
           SystemProgram.transfer({
@@ -239,43 +260,56 @@ const PaymentContent: React.FC = () => {
             lamports: lamports,
           })
         );
-        
+
         // Get a recent blockhash
-        const { blockhash } = await connection.getLatestBlockhash('confirmed');
+        const { blockhash } = await connection.getLatestBlockhash("confirmed");
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = fromWalletPublicKey;
-        
+
         // Send transaction using Phantom wallet
         if (!window.phantom?.solana) {
           throw new Error("Phantom wallet not detected");
         }
-        
+
         toast.info("Please approve the transaction in your wallet");
-        
+
         // Request signature from the user
-        const signedTransaction = await window.phantom.solana.signTransaction(transaction);
-        
+        const signedTransaction = await window.phantom.solana.signTransaction(
+          transaction
+        );
+
         // Send the transaction to the network
         toast.info("Sending transaction to Solana network...");
-        const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-        
+        const signature = await connection.sendRawTransaction(
+          signedTransaction.serialize()
+        );
+
         // Wait for confirmation
         toast.info("Waiting for transaction confirmation...");
-        const confirmation = await connection.confirmTransaction(signature, 'confirmed');
-        
+        const confirmation = await connection.confirmTransaction(
+          signature,
+          "confirmed"
+        );
+
         if (confirmation.value.err) {
           throw new Error(`Transaction failed: ${confirmation.value.err}`);
         }
-        
+
         // Set the transaction signature for display
         setTransactionSignature(signature);
-        
+
         // Show success message with explorer link
         const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
         toast.success(
           <div>
-            Payment successful!<br/>
-            <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="underline text-blue-500">
+            Payment successful!
+            <br />
+            <a
+              href={explorerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-blue-500"
+            >
               View transaction on Solana Explorer
             </a>
           </div>,
@@ -290,6 +324,17 @@ const PaymentContent: React.FC = () => {
         const pointsEarned = Math.round(parseFloat(cartTotal));
         setEarnedPoints(pointsEarned);
 
+        console.log("Payment successful, preparing to add to purchase history");
+        const purchaseData = {
+          transactionSignature: signature,
+          receiptAddress: toStorePublicKey.toString(),
+          storeAddress: storeWalletAddress,
+          buyerAddress: walletAddress,
+          totalAmount: parseFloat(cartTotal),
+          timestamp: new Date().toISOString(),
+        };
+        console.log("Purchase data:", purchaseData);
+
         // Add to purchase history
         await addNewPurchase({
           transactionSignature: signature,
@@ -298,7 +343,7 @@ const PaymentContent: React.FC = () => {
           buyerAddress: walletAddress,
           totalAmount: parseFloat(cartTotal),
           timestamp: Math.floor(Date.now() / 1000),
-          confirmed: true
+          confirmed: true,
         });
 
         // Show success dialog
@@ -319,12 +364,18 @@ const PaymentContent: React.FC = () => {
           } else if (error.message.includes("insufficient funds")) {
             errorMessage =
               "Insufficient funds in your wallet to complete this transaction. You can get free SOL from the Solana Devnet faucet.";
-            
+
             // Add a link to the Solana Devnet faucet
             toast.error(
               <div>
-                {errorMessage}<br/>
-                <a href="https://solfaucet.com" target="_blank" rel="noopener noreferrer" className="underline text-blue-500 mt-2 inline-block">
+                {errorMessage}
+                <br />
+                <a
+                  href="https://solfaucet.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-blue-500 mt-2 inline-block"
+                >
                   Get free Devnet SOL
                 </a>
               </div>,
@@ -347,9 +398,7 @@ const PaymentContent: React.FC = () => {
           ) {
             errorMessage =
               "The store account does not exist on Devnet. Please make sure the store is properly initialized.";
-          } else if (
-            error.message.includes("custom program error")
-          ) {
+          } else if (error.message.includes("custom program error")) {
             errorMessage =
               "Smart contract error. This could be due to incorrect program ID or the store not being properly initialized.";
           } else {
@@ -410,23 +459,43 @@ const PaymentContent: React.FC = () => {
         onContinue={handleCloseSuccessDialog}
         transactionSignature={transactionSignature}
       />
-      
+
       {/* Debug info - only visible in development mode */}
       {import.meta.env.DEV && (
         <div className="mt-8 border border-gray-300 rounded-md p-4 bg-gray-50 text-xs">
           <h3 className="font-semibold mb-2">Devnet Transaction Details:</h3>
           <div className="space-y-1">
-            <p><strong>Store ID:</strong> {storeId}</p>
-            <p><strong>User Wallet:</strong> {walletAddress || sessionStorage.getItem("userWallet") || 'Not connected'}</p>
-            <p><strong>Store Wallet:</strong> {storeWalletAddress || 'Not available'}</p>
-            {storePda && <p><strong>Store PDA:</strong> {storePda}</p>}
-            <p><strong>Amount:</strong> {cartTotal} SOL</p>
+            <p>
+              <strong>Store ID:</strong> {storeId}
+            </p>
+            <p>
+              <strong>User Wallet:</strong>{" "}
+              {walletAddress ||
+                sessionStorage.getItem("userWallet") ||
+                "Not connected"}
+            </p>
+            <p>
+              <strong>Store Wallet:</strong>{" "}
+              {storeWalletAddress || "Not available"}
+            </p>
+            {storePda && (
+              <p>
+                <strong>Store PDA:</strong> {storePda}
+              </p>
+            )}
+            <p>
+              <strong>Amount:</strong> {cartTotal} SOL
+            </p>
             {transactionSignature && (
               <p>
-                <strong>Signature:</strong> {transactionSignature.substring(0, 8)}...{transactionSignature.substring(transactionSignature.length - 8)}
-                <a 
-                  href={`https://explorer.solana.com/tx/${transactionSignature}?cluster=devnet`} 
-                  target="_blank" 
+                <strong>Signature:</strong>{" "}
+                {transactionSignature.substring(0, 8)}...
+                {transactionSignature.substring(
+                  transactionSignature.length - 8
+                )}
+                <a
+                  href={`https://explorer.solana.com/tx/${transactionSignature}?cluster=devnet`}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="ml-2 underline text-blue-500"
                 >

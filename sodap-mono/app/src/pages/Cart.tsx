@@ -97,7 +97,7 @@ const CartContent: React.FC = () => {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/store-selection")}
               >
                 Continue Shopping
               </Button>

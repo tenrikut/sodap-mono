@@ -29,6 +29,16 @@ export interface Purchase {
 export const usePurchaseHistory = () => {
   const { program, walletAddress, connection } = useAnchor();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load cached purchases first
+  useEffect(() => {
+    const cachedPurchases = sessionStorage.getItem("cachedPurchases");
+    if (cachedPurchases) {
+      setPurchases(JSON.parse(cachedPurchases));
+    }
+  }, []);
 
   // Load return requests to mark returned items
   useEffect(() => {
@@ -45,8 +55,6 @@ export const usePurchaseHistory = () => {
       );
     }
   }, []);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Function to fetch a single purchase by its transaction signature
   const fetchSinglePurchase = useCallback(
@@ -79,15 +87,23 @@ export const usePurchaseHistory = () => {
 
         console.log("Transaction data:", tx);
 
+        // Get store name from session storage
+        const selectedStoreName = sessionStorage.getItem("selectedStoreName") || "Unknown Store";
+        
+        // Calculate total amount from transaction
+        const totalAmount = tx.meta?.postBalances && tx.meta?.preBalances ?
+          (tx.meta.preBalances[0] - tx.meta.postBalances[0]) / LAMPORTS_PER_SOL :
+          0;
+
         // Create purchase data from transaction
         const purchase: Purchase = {
           id: txSignature,
-          storeName: "Store 5", // We know this is store 5
+          storeName: selectedStoreName,
           date: new Date(
             tx.blockTime ? tx.blockTime * 1000 : Date.now()
           ).toISOString(),
-          items: [], // We don't have item details
-          totalAmount: 0.1, // We know this is 0.1 SOL
+          items: [], // We don't have item details yet
+          totalAmount,
           transactionSignature: txSignature,
         };
 
@@ -123,60 +139,66 @@ export const usePurchaseHistory = () => {
       );
       console.log("Using program ID:", program.programId.toString());
 
-      // Get all purchase accounts using getProgramAccounts
-      console.log("Using program ID:", program.programId.toString());
-      const accounts = await connection.getProgramAccounts(program.programId, {
-        filters: [
-          {
-            memcmp: {
-              offset: 8, // After the account discriminator
-              bytes: bs58.encode(
-                new PublicKey(walletAddress.toString()).toBuffer()
-              ), // Filter by buyer address
-            },
-          },
-        ],
-      });
+      // Check if we need to fetch new transactions
+      const lastFetchTime = sessionStorage.getItem("lastPurchaseFetchTime");
+      const FETCH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+      
+      if (lastFetchTime && Date.now() - parseInt(lastFetchTime) < FETCH_INTERVAL) {
+        console.log("Using cached purchases, too soon to fetch new ones");
+        return;
+      }
 
-      console.log("Found accounts:", accounts.length, "accounts");
-      console.log(
-        "Account pubkeys:",
-        accounts.map((a) => a.pubkey.toString())
+      // Get recent transactions for the wallet
+      console.log("Fetching recent transactions for wallet:", walletAddress.toString());
+      const signatures = await connection.getSignaturesForAddress(
+        new PublicKey(walletAddress.toString()),
+        { limit: 10 } // Reduced from 20 to 10 to avoid rate limits
       );
 
-      // Convert accounts to purchase accounts
-      const userPurchases = await Promise.all(
-        accounts.map(async ({ pubkey, account }) => {
+      console.log("Found signatures:", signatures.length);
+      
+      // Update last fetch time
+      sessionStorage.setItem("lastPurchaseFetchTime", Date.now().toString());
+
+      // Get transaction details and filter for payments
+      const transactions = await Promise.all(
+        signatures.map(async (sig) => {
           try {
-            const purchaseAccount = await program.account.purchase.fetch(
-              pubkey
-            );
-            return {
-              publicKey: pubkey,
-              account: purchaseAccount,
-            };
+            const tx = await connection.getTransaction(sig.signature, {
+              maxSupportedTransactionVersion: 0
+            });
+            return { signature: sig.signature, tx };
           } catch (err) {
-            console.error("Error decoding purchase account:", err);
+            console.error("Error fetching transaction:", err);
             return null;
           }
         })
       );
 
-      // Filter out null results
-      const validPurchases = userPurchases.filter(
-        (p): p is NonNullable<typeof p> => p !== null
-      );
-      console.log("Valid purchases:", validPurchases);
+      // Filter for valid payment transactions
+      const validPurchases = transactions
+        .filter((tx): tx is NonNullable<typeof tx> => 
+          tx !== null && 
+          tx.tx !== null && 
+          tx.tx.meta?.postBalances !== undefined && 
+          tx.tx.meta?.preBalances !== undefined
+        )
+        .filter(tx => {
+          // Check if this is a payment transaction (balance decreased)
+          const balanceChange = (tx.tx.meta?.preBalances[0] ?? 0) - (tx.tx.meta?.postBalances[0] ?? 0);
+          return balanceChange > 0; // Only include transactions where balance decreased
+        });
 
-      // Transform all purchases into display format
+      console.log("Valid payment transactions:", validPurchases.length);
+
+      // Transform transactions into purchase format
       const transformedPurchases = await Promise.all(
-        validPurchases.map(async (p) => {
+        validPurchases.map(async ({ signature, tx }) => {
           try {
-            console.log("Transforming purchase:", p.publicKey.toString());
-            console.log("Purchase account:", p.account);
+            console.log("Transforming transaction:", signature);
             const purchase = await fetchSinglePurchase(
-              p.publicKey.toString(),
-              undefined
+              signature,
+              signature
             );
             console.log("Transformed purchase:", purchase);
             return purchase;
@@ -207,10 +229,28 @@ export const usePurchaseHistory = () => {
   // Function to add a new purchase after payment
   const addNewPurchase = useCallback(
     async (paymentResult: ExtendedPaymentResult): Promise<void> => {
+      console.log('Adding new purchase with data:', paymentResult);
       if (!program || !walletAddress) {
+        console.error('Cannot add purchase: program or wallet not connected');
         setError("Wallet not connected");
         return;
       }
+
+      // Create purchase from payment result immediately
+      const selectedStoreName = sessionStorage.getItem("selectedStoreName") || "Unknown Store";
+      const newPurchase: Purchase = {
+        id: paymentResult.transactionSignature,
+        storeName: selectedStoreName,
+        date: new Date().toISOString(),
+        items: [], // We don't have item details yet
+        totalAmount: paymentResult.totalAmount,
+        transactionSignature: paymentResult.transactionSignature
+      };
+
+      // Update state and cache immediately
+      setPurchases(prev => [newPurchase, ...prev]);
+      const cachedPurchases = JSON.parse(sessionStorage.getItem("cachedPurchases") || "[]");
+      sessionStorage.setItem("cachedPurchases", JSON.stringify([newPurchase, ...cachedPurchases]));
 
       try {
         const purchase = await fetchSinglePurchase(
@@ -228,34 +268,15 @@ export const usePurchaseHistory = () => {
     [program, walletAddress, fetchSinglePurchase, setPurchases]
   );
 
+  // Fetch real purchases when wallet is connected
   useEffect(() => {
     if (walletAddress) {
-      // Set mock data for now
-      const mockPurchases: Purchase[] = [
-        {
-          id: "1",
-          storeName: "Store 1",
-          date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-          items: [
-            { name: "Item 1", price: 0.1, quantity: 1 },
-            { name: "Item 2", price: 0.2, quantity: 2 },
-          ],
-          totalAmount: 0.5,
-          transactionSignature: "mock_tx_1",
-        },
-        {
-          id: "2",
-          storeName: "Store 2",
-          date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-          items: [{ name: "Item 3", price: 0.3, quantity: 1 }],
-          totalAmount: 0.3,
-          transactionSignature: "mock_tx_2",
-        },
-      ];
-
-      setPurchases(mockPurchases);
+      console.log('Wallet connected, fetching purchases for:', walletAddress.toString());
+      fetchPurchases();
+    } else {
+      console.log('No wallet connected, skipping purchase fetch');
     }
-  }, [walletAddress]);
+  }, [walletAddress, fetchPurchases]);
 
   return {
     purchases,
