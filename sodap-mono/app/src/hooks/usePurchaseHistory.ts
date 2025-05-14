@@ -7,6 +7,13 @@ import { PaymentResult } from "./usePayment";
 
 interface ExtendedPaymentResult extends PaymentResult {
   storeId?: string;
+  items?: Array<{
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
+  storeName?: string;
+  date?: string;
 }
 import bs58 from "bs58";
 
@@ -248,9 +255,18 @@ export const usePurchaseHistory = () => {
       };
 
       // Update state and cache immediately
-      setPurchases(prev => [newPurchase, ...prev]);
+      const purchase: Purchase = {
+        id: paymentResult.transactionSignature,
+        storeName: paymentResult.storeName || sessionStorage.getItem("selectedStoreName") || "Unknown Store",
+        date: paymentResult.date || new Date().toISOString(),
+        items: paymentResult.items || [],
+        totalAmount: paymentResult.totalAmount,
+        transactionSignature: paymentResult.transactionSignature
+      };
+
+      setPurchases(prev => [purchase, ...prev]);
       const cachedPurchases = JSON.parse(sessionStorage.getItem("cachedPurchases") || "[]");
-      sessionStorage.setItem("cachedPurchases", JSON.stringify([newPurchase, ...cachedPurchases]));
+      sessionStorage.setItem("cachedPurchases", JSON.stringify([purchase, ...cachedPurchases]));
 
       try {
         const purchase = await fetchSinglePurchase(

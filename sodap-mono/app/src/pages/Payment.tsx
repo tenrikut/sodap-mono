@@ -21,7 +21,7 @@ import {
 } from "@solana/web3.js";
 
 // Content component that uses the profile context
-const PaymentContent: React.FC = () => {
+const PaymentContent: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
   const { userProfile } = useProfile();
   const {
@@ -95,7 +95,7 @@ const PaymentContent: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [walletAddress, isProcessing, connectWallet]);
 
-  const handleConnectWallet = async () => {
+  const handleConnectWallet = async (): Promise<void> => {
     try {
       const success = await connectWallet();
       if (success) {
@@ -185,7 +185,7 @@ const PaymentContent: React.FC = () => {
     }
   }, []);
 
-  const handlePayment = async () => {
+  const handlePayment = async (): Promise<void> => {
     try {
       // Check if we have Batur's wallet address when username is Batur
       const username = sessionStorage.getItem("username");
@@ -274,7 +274,9 @@ const PaymentContent: React.FC = () => {
         toast.info("Please approve the transaction in your wallet");
 
         // Request signature from the user using wallet adapter
-        const signedTransaction = await program.provider.wallet.signTransaction(transaction);
+        const signedTransaction = await program.provider.wallet.signTransaction(
+          transaction
+        );
 
         // Send the transaction to the network
         toast.info("Sending transaction to Solana network...");
@@ -333,37 +335,145 @@ const PaymentContent: React.FC = () => {
         };
         console.log("Purchase data:", purchaseData);
 
-        // Add to purchase history
+        // Add purchase to history with cart items
         await addNewPurchase({
           transactionSignature: signature,
-          receiptAddress: toStorePublicKey.toString(),
+          receiptAddress: storeId,
           storeAddress: storeWalletAddress,
-          buyerAddress: walletAddress,
+          buyerAddress: walletAddress?.toString() || "",
           totalAmount: parseFloat(cartTotal),
           timestamp: Math.floor(Date.now() / 1000),
           confirmed: true,
+          items: cartItems.map((item) => ({
+            name: item.product.name,
+            price: item.product.price,
+            quantity: item.quantity,
+          })),
+          storeName:
+            sessionStorage.getItem("selectedStoreName") || "Unknown Store",
+          date: new Date().toISOString(),
         });
 
+        // Clear cart after successful payment
+        sessionStorage.removeItem("cartItems");
+        sessionStorage.removeItem("cartTotal");
+
         // Show success dialog
+        setTransactionSignature(signature);
         setShowSuccessDialog(true);
-      } catch (error) {
-        console.error("Transaction error:", error);
 
-        // Handle specific error types
-        let errorMessage = "Payment failed";
+        // Calculate and set earned points (1 point per SOL spent)
+        setEarnedPoints(Math.floor(parseFloat(cartTotal)));
+      } catch (err: unknown) {
+        console.error("Payment error:", err);
+        let errorMessage = "Payment failed: Unknown error";
 
-        if (error instanceof Error) {
-          if (error.message.includes("Non-base58") || error.message.includes("invalid public key")) {
-            errorMessage =
-              "Invalid wallet address format. Please reconnect your wallet.";
-          } else if (error.message.includes("User rejected") || error.message.includes("was not approved")) {
-            errorMessage =
-              "Transaction was rejected. Please try again and approve the transaction.";
-          } else if (error.message.includes("insufficient funds") || error.message.includes("insufficient lamports")) {
-            errorMessage =
-              "Insufficient funds in your wallet to complete this transaction. You can get free SOL from the Solana Devnet faucet.";
+        if (err instanceof Error) {
+          const errorMap = {
+            "Invalid wallet address":
+              "Invalid wallet address format. Please reconnect your wallet.",
+            "User rejected":
+              "Transaction was rejected. Please try again and approve the transaction.",
+            "was not approved":
+              "Transaction was rejected. Please try again and approve the transaction.",
+            "insufficient funds":
+              "Insufficient funds in your wallet to complete this transaction. You can get free SOL from the Solana Devnet faucet.",
+            "insufficient lamports":
+              "Insufficient funds in your wallet to complete this transaction. You can get free SOL from the Solana Devnet faucet.",
+            "Cannot read properties of undefined":
+              "Wallet connection error. Please reconnect your wallet and try again.",
+            "wallet not connected":
+              "Wallet connection error. Please reconnect your wallet and try again.",
+            "Failed to create purchase instruction":
+              "Transaction failed: The store program doesn't support this transaction type.",
+            AccountNotFound:
+              "The store account does not exist on Devnet. Please make sure the store is properly initialized.",
+            "Account does not exist":
+              "The store account does not exist on Devnet. Please make sure the store is properly initialized.",
+            "custom program error":
+              "Smart contract error. This could be due to incorrect program ID or the store not being properly initialized.",
+          };
 
-            // Add a link to the Solana Devnet faucet
+          // Find the first matching error message
+          const matchedError = Object.entries(errorMap).find(([key]) =>
+            err.message.includes(key)
+          );
+          if (matchedError) {
+            errorMessage = matchedError[1];
+
+            // Special handling for insufficient funds
+            if (
+              err.message.includes("insufficient funds") ||
+              err.message.includes("insufficient lamports")
+            ) {
+              toast.error(
+                <div>
+                  {errorMessage}
+                  <br />
+                  <a
+                    href="https://solfaucet.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-blue-500 mt-2 inline-block"
+                  >
+                    Get free Devnet SOL
+                  </a>
+                </div>,
+                { duration: 10000 }
+              );
+              return; // Early return to avoid double toast
+            }
+          } else {
+            errorMessage = `Payment failed: ${err.message}`;
+          }
+        }
+
+        toast.error(errorMessage);
+      } finally {
+        setIsProcessing(false);
+      }
+    } catch (err: unknown) {
+      console.error("Payment error:", err);
+      let errorMessage = "Payment failed: Unknown error";
+
+      if (err instanceof Error) {
+        const errorMap = {
+          "Invalid wallet address":
+            "Invalid wallet address format. Please reconnect your wallet.",
+          "User rejected":
+            "Transaction was rejected. Please try again and approve the transaction.",
+          "was not approved":
+            "Transaction was rejected. Please try again and approve the transaction.",
+          "insufficient funds":
+            "Insufficient funds in your wallet to complete this transaction. You can get free SOL from the Solana Devnet faucet.",
+          "insufficient lamports":
+            "Insufficient funds in your wallet to complete this transaction. You can get free SOL from the Solana Devnet faucet.",
+          "Cannot read properties of undefined":
+            "Wallet connection error. Please reconnect your wallet and try again.",
+          "wallet not connected":
+            "Wallet connection error. Please reconnect your wallet and try again.",
+          "Failed to create purchase instruction":
+            "Transaction failed: The store program doesn't support this transaction type.",
+          AccountNotFound:
+            "The store account does not exist on Devnet. Please make sure the store is properly initialized.",
+          "Account does not exist":
+            "The store account does not exist on Devnet. Please make sure the store is properly initialized.",
+          "custom program error":
+            "Smart contract error. This could be due to incorrect program ID or the store not being properly initialized.",
+        };
+
+        // Find the first matching error message
+        const matchedError = Object.entries(errorMap).find(([key]) =>
+          err.message.includes(key)
+        );
+        if (matchedError) {
+          errorMessage = matchedError[1];
+
+          // Special handling for insufficient funds
+          if (
+            err.message.includes("insufficient funds") ||
+            err.message.includes("insufficient lamports")
+          ) {
             toast.error(
               <div>
                 {errorMessage}
@@ -380,42 +490,19 @@ const PaymentContent: React.FC = () => {
               { duration: 10000 }
             );
             return; // Early return to avoid double toast
-          } else if (error.message.includes("Cannot read properties of undefined") || error.message.includes("wallet not connected")) {
-            errorMessage = "Wallet connection error. Please reconnect your wallet and try again.";
-          } else if (
-            error.message.includes("Failed to create purchase instruction")
-          ) {
-            errorMessage =
-              "Transaction failed: The store program doesn't support this transaction type.";
-          } else if (
-            error.message.includes("AccountNotFound") ||
-            error.message.includes("Account does not exist")
-          ) {
-            errorMessage =
-              "The store account does not exist on Devnet. Please make sure the store is properly initialized.";
-          } else if (error.message.includes("custom program error")) {
-            errorMessage =
-              "Smart contract error. This could be due to incorrect program ID or the store not being properly initialized.";
-          } else {
-            errorMessage = `Payment failed: ${error.message}`;
           }
+        } else {
+          errorMessage = `Payment failed: ${err.message}`;
         }
-
-        toast.error(errorMessage);
       }
-    } catch (error) {
-      console.error("Payment error:", error);
-      toast.error(
-        `Payment failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+
+      toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleCloseSuccessDialog = () => {
+  const handleCloseSuccessDialog = (): void => {
     setShowSuccessDialog(false);
     // Navigate to store selection page instead of cart
     navigate("/store-selection");
@@ -506,7 +593,7 @@ const PaymentContent: React.FC = () => {
 };
 
 // Wrapper component that provides the Profile context
-const Payment: React.FC = () => {
+const Payment: React.FC = (): React.ReactElement => {
   return (
     <Layout role="end_user">
       <ProfileProvider>
