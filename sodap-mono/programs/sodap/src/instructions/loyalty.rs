@@ -1,9 +1,5 @@
 use crate::error::CustomError;
 use crate::state::loyalty::LoyaltyMint;
-use crate::state::loyalty::{
-    InitializeLoyaltyMint as InitializeLoyaltyMintState,
-    MintLoyaltyTokens as MintLoyaltyTokensState, RedeemLoyaltyPoints as RedeemLoyaltyPointsState,
-};
 use crate::state::store::Store;
 use anchor_lang::prelude::*;
 use anchor_spl::{
@@ -43,6 +39,7 @@ pub struct InitializeLoyaltyMint<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+// Simplified account structure for MintLoyaltyTokens to reduce stack usage
 #[derive(Accounts)]
 pub struct MintLoyaltyTokens<'info> {
     pub store: Account<'info, Store>,
@@ -55,6 +52,7 @@ pub struct MintLoyaltyTokens<'info> {
     pub destination: InterfaceAccount<'info, TokenAccount>,
 }
 
+// Simplified account structure for RedeemLoyaltyPoints to reduce stack usage
 #[derive(Accounts)]
 pub struct RedeemLoyaltyPoints<'info> {
     pub store: Account<'info, Store>,
@@ -94,19 +92,24 @@ pub fn mint_loyalty_points(
     amount: u64,
     _destination: Pubkey,
 ) -> Result<()> {
-    // First, perform the token mint operation
-    let mint_info = ctx.accounts.loyalty_mint.to_account_info();
-    let destination_info = ctx.accounts.destination.to_account_info();
-    let authority_info = ctx.accounts.authority.to_account_info();
-    let token_program_info = ctx.accounts.token_program.to_account_info();
-
-    let cpi_accounts = MintTo {
-        mint: mint_info,
-        to: destination_info,
-        authority: authority_info,
+    // Break up the operation into smaller pieces to reduce stack usage
+    let token_program = &ctx.accounts.token_program;
+    let mint = &ctx.accounts.loyalty_mint;
+    let destination = &ctx.accounts.destination;
+    let authority = &ctx.accounts.authority;
+    
+    // Create mint accounts with smaller stack frame
+    let mint_accounts = token::MintTo {
+        mint: mint.to_account_info(),
+        to: destination.to_account_info(),
+        authority: authority.to_account_info(),
     };
-
-    let cpi_ctx = CpiContext::new(token_program_info, cpi_accounts);
+    
+    // Create CPI context with separate variables to reduce stack frame 
+    let cpi_program = token_program.to_account_info();
+    let cpi_ctx = CpiContext::new(cpi_program, mint_accounts);
+    
+    // Execute mint operation
     token::mint_to(cpi_ctx, amount)?;
 
     Ok(())
@@ -116,38 +119,48 @@ pub fn redeem_loyalty_points(
     ctx: Context<RedeemLoyaltyPoints>,
     points_to_redeem: u64,
 ) -> Result<()> {
-    // First, perform the token burn operation
-    let mint_info = ctx.accounts.loyalty_mint.to_account_info();
-    let source_info = ctx.accounts.source.to_account_info();
-    let authority_info = ctx.accounts.authority.to_account_info();
-    let token_program_info = ctx.accounts.token_program.to_account_info();
-
-    let cpi_accounts = token_2022::Burn {
-        mint: mint_info,
-        from: source_info,
-        authority: authority_info,
+    // Break up the operation into smaller pieces to reduce stack usage
+    let mint = &ctx.accounts.loyalty_mint;
+    let source = &ctx.accounts.source;  
+    let authority = &ctx.accounts.authority;
+    let token_program = &ctx.accounts.token_program;
+    
+    // Create burn accounts with smaller stack frame
+    let burn_accounts = token_2022::Burn {
+        mint: mint.to_account_info(),
+        from: source.to_account_info(), 
+        authority: authority.to_account_info(),
     };
-
-    let cpi_ctx = CpiContext::new(token_program_info, cpi_accounts);
+    
+    // Create CPI context with separate variables to reduce stack frame
+    let cpi_program = token_program.to_account_info();
+    let cpi_ctx = CpiContext::new(cpi_program, burn_accounts);
+    
+    // Execute burn operation
     token_2022::burn(cpi_ctx, points_to_redeem)?;
 
     Ok(())
 }
 
 pub fn handle_transfer_hook(ctx: Context<LoyaltyTransferHook>, amount: u64) -> Result<()> {
-    // First, perform the token mint operation
-    let mint_info = ctx.accounts.mint.to_account_info();
-    let to_info = ctx.accounts.to.to_account_info();
-    let authority_info = ctx.accounts.authority.to_account_info();
-    let token_program_info = ctx.accounts.token_program.to_account_info();
-
-    let cpi_accounts = MintTo {
-        mint: mint_info,
-        to: to_info,
-        authority: authority_info,
+    // Break up the operation into smaller pieces to reduce stack usage
+    let mint = &ctx.accounts.mint;
+    let to = &ctx.accounts.to;
+    let authority = &ctx.accounts.authority;
+    let token_program = &ctx.accounts.token_program;
+    
+    // Create mint accounts with smaller stack frame
+    let mint_accounts = MintTo {
+        mint: mint.to_account_info(),
+        to: to.to_account_info(),
+        authority: authority.to_account_info(),
     };
-
-    let cpi_ctx = CpiContext::new(token_program_info, cpi_accounts);
+    
+    // Create CPI context with separate variables to reduce stack frame
+    let cpi_program = token_program.to_account_info();
+    let cpi_ctx = CpiContext::new(cpi_program, mint_accounts);
+    
+    // Execute mint operation
     token::mint_to(cpi_ctx, amount)?;
 
     Ok(())

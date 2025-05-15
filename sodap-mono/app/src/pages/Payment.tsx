@@ -15,12 +15,18 @@ import { PaymentSuccessDialog } from "@/components/payment/PaymentSuccessDialog"
 import { useCart } from "@/hooks/useCart";
 import { usePurchaseHistory } from "@/hooks/usePurchaseHistory";
 import { useReturnRequests } from "@/hooks/useReturnRequests";
+import { useLoyalty } from "@/hooks/useLoyalty";
+import * as anchor from '@coral-xyz/anchor';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
   Transaction,
   SystemProgram,
   LAMPORTS_PER_SOL,
+  Keypair,
 } from "@solana/web3.js";
+import { CartItem } from "@/types/cart";
+import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
 
 // Content component that uses the profile context
 const PaymentContent: React.FC = (): React.ReactElement => {
@@ -189,6 +195,9 @@ const PaymentContent: React.FC = (): React.ReactElement => {
     }
   }, []);
 
+  // Initialize loyalty for the store
+  const { loyaltyState, earnPoints } = useLoyalty(new PublicKey(storeId));
+
   const handlePayment = async (): Promise<void> => {
     try {
       // Check if we have Batur's wallet address when username is Batur
@@ -325,49 +334,92 @@ const PaymentContent: React.FC = (): React.ReactElement => {
           totalAmount: parseFloat(cartTotal)
         };
 
+        // Create purchase record with updated Anchor v0.31.1 syntax
+        // Convert product IDs to PublicKeys and prepare quantities
+        const productIds = cartItems.map(item => new PublicKey(item.product.id));
+        const quantities = cartItems.map(item => new anchor.BN(item.quantity));
+        const totalAmountPaid = new anchor.BN(purchase.totalAmount);
+
+        // Generate receipt keypair
+        const receipt = Keypair.generate();
+
+        // Find PDAs
+        const [escrowPda] = findProgramAddressSync(
+          [Buffer.from('escrow'), new PublicKey(storeId).toBuffer()],
+          program.programId
+        );
+
+        const [storeOwnerPda] = findProgramAddressSync(
+          [Buffer.from('store'), new PublicKey(storeId).toBuffer()],
+          program.programId
+        );
+
+        // Find loyalty mint PDA if loyalty is enabled
+        let loyaltyMintPda: PublicKey | null = null;
+        if (loyaltyState.isInitialized && loyaltyState.mintAddress) {
+          [loyaltyMintPda] = findProgramAddressSync(
+            [Buffer.from('loyalty_mint'), new PublicKey(storeId).toBuffer()],
+            program.programId
+          );
+        }
+
+        // Prepare transaction accounts with required fields
+        const transactionAccounts = {
+          store: new PublicKey(storeId),
+          receipt: receipt.publicKey,
+          buyer: new PublicKey(walletAddress),
+          storeOwner: storeOwnerPda,
+          escrowAccount: escrowPda,
+          systemProgram: SystemProgram.programId,
+          // Always include loyalty accounts, but set them to null if not enabled
+          tokenMint: loyaltyState.isInitialized && loyaltyState.mintAddress
+            ? loyaltyState.mintAddress
+            : null,
+          tokenProgram: loyaltyState.isInitialized && loyaltyState.mintAddress
+            ? TOKEN_PROGRAM_ID
+            : null,
+          loyaltyMintInfo: loyaltyState.isInitialized && loyaltyState.mintAddress
+            ? loyaltyMintPda
+            : null,
+          tokenAccount: null, // Will be resolved by the program
+          mintAuthority: null, // Will be resolved by the program
+        };
+
+        // Execute purchase transaction
+        const purchaseId = await program.methods
+          .purchaseCart(
+            productIds,
+            quantities,
+            totalAmountPaid
+          )
+          .accountsStrict(transactionAccounts)
+          .signers([receipt])
+          .rpc();
+
         // Add purchase to history
         await addNewPurchase(purchase);
 
-        // Calculate earned points (1 point per SOL)
-        const points = Math.floor(parseFloat(cartTotal));
-        setEarnedPoints(points);
+        // Calculate and award loyalty points
+        const amountInSol = parseFloat(cartTotal);
+        const pointsToEarn = Math.floor(amountInSol * 100); // 100 points per SOL
 
-        // Save purchase data for potential refunds
-        sessionStorage.setItem('lastPurchase', JSON.stringify(purchase));
-
-        // Also save to purchases array
-        const existingPurchases = JSON.parse(sessionStorage.getItem('purchases') || '[]');
-        sessionStorage.setItem('purchases', JSON.stringify([purchase, ...existingPurchases]));
-
-        // Create a return request automatically
         try {
-          // Wait a bit to ensure purchase data is saved
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Create return request
-          await createReturnRequest(
-            purchase,
-            'Automatically created for tracking purposes'
-          );
-
-          // Refresh the requests list
-          await refreshRequests();
-
-          // Clear the cart
-          setCartItems([]);
-          sessionStorage.removeItem('cartTotal');
+          if (loyaltyState.isInitialized) {
+            await earnPoints(pointsToEarn, new PublicKey(signature));
+            setEarnedPoints(pointsToEarn);
+          }
         } catch (error) {
-          console.error('Error creating return request:', error);
-          // Don't show error to user since this is automatic
+          console.error('Error awarding loyalty points:', error instanceof Error ? error.message : 'Unknown error');
+          toast.error('Transaction successful but failed to award loyalty points');
         }
 
         // Show success dialog
         setShowSuccessDialog(true);
 
         // Clear cart
+        setCartItems([]);
         sessionStorage.removeItem("cartItems");
         sessionStorage.removeItem("cartTotal");
-      sessionStorage.removeItem("cartTotal");
       } catch (err: unknown) {
         console.error("Payment error:", err);
         let errorMessage = "Payment failed: Unknown error";
