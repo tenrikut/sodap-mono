@@ -13,7 +13,7 @@ pub struct StoreEscrow<'info> {
     #[account(
         init_if_needed,
         payer = payer,
-        space = 8 + 32 + 8, // store pubkey + balance
+        space = Escrow::DISCRIMINATOR.len() + 32 + 8, // Pubkey + balance
         seeds = [b"escrow", store.key().as_ref()],
         bump
     )]
@@ -34,14 +34,25 @@ pub fn register_product(
     metadata_uri: String,
 ) -> Result<()> {
     let product = &mut ctx.accounts.product;
+
+    // Initialize main fields
     product.uuid = product_uuid;
     product.price = price;
     product.stock = stock;
     product.tokenized_type = tokenized_type;
-    product.metadata_uri = metadata_uri;
-    product.is_active = true;
+    product.is_active = 1;
     product.store = ctx.accounts.store.key();
     product.authority = ctx.accounts.authority.key();
+
+    // Initialize padding fields with zeros
+    product._padding = [0u8; 6];
+
+    // Copy metadata_uri bytes with zero padding
+    let mut uri_bytes = [0u8; 128];
+    let metadata_bytes = metadata_uri.as_bytes();
+    let len = std::cmp::min(metadata_bytes.len(), 128);
+    uri_bytes[..len].copy_from_slice(&metadata_bytes[..len]);
+    product.metadata_uri = uri_bytes;
 
     Ok(())
 }
@@ -60,12 +71,12 @@ pub fn update_product(
         product.price = price;
     }
 
-    if let Some(stock) = new_stock {
-        product.stock = stock;
-    }
-
     if let Some(metadata_uri) = new_metadata_uri {
-        product.metadata_uri = metadata_uri;
+        let mut uri_bytes = [0u8; 128];
+        let metadata_bytes = metadata_uri.as_bytes();
+        let len = std::cmp::min(metadata_bytes.len(), 128);
+        uri_bytes[..len].copy_from_slice(&metadata_bytes[..len]);
+        product.metadata_uri = uri_bytes;
     }
 
     if let Some(tokenized_type) = new_tokenized_type {
@@ -77,7 +88,7 @@ pub fn update_product(
 
 pub fn deactivate_product(ctx: Context<DeactivateProduct>, _product_uuid: [u8; 16]) -> Result<()> {
     let product = &mut ctx.accounts.product;
-    product.is_active = false;
+    product.is_active = 0;
     Ok(())
 }
 
@@ -102,7 +113,7 @@ fn validate_cart_and_payment<'a, 'b>(
             product.uuid == product_uuids[i],
             CustomError::ProductNotFound
         );
-        require!(product.is_active, CustomError::ProductNotFound);
+        require!(product.is_active == 1, CustomError::ProductNotFound);
         require!(
             product.stock >= quantities[i],
             CustomError::InsufficientStock
@@ -147,6 +158,31 @@ pub fn purchase_cart<'info>(
         total_amount_paid,
     )?;
 
+    // Initialize receipt with zero padding
+    let receipt = &mut ctx.accounts.receipt;
+    receipt.product_count = product_uuids.len() as u8;
+    receipt._padding = [0u8; 7];
+    receipt._padding2 = [0u8; 7];
+
+    // Initialize arrays
+    receipt.product_ids = [Pubkey::default(); 10];
+    receipt.quantities = [0u64; 10];
+
+    // Copy product IDs and quantities
+    for (i, &uuid) in product_uuids.iter().enumerate().take(10) {
+        if let Some(product_acc) = remaining_accounts.get(i) {
+            receipt.product_ids[i] = *product_acc.key;
+            receipt.quantities[i] = quantities[i];
+        }
+    }
+
+    receipt.total_paid = total_price;
+    receipt.gas_fee = gas_fee;
+    receipt.store = ctx.accounts.store.key();
+    receipt.buyer = ctx.accounts.buyer.key();
+    receipt.timestamp = Clock::get()?.unix_timestamp;
+    receipt.status = status as u8;
+
     // Transfer payment from buyer to escrow account
     let escrow_seeds = &[
         b"escrow",
@@ -182,17 +218,7 @@ pub fn purchase_cart<'info>(
         i += 1;
     }
 
-    // Create receipt
-    let receipt = &mut ctx.accounts.receipt;
-    receipt.product_uuids = product_uuids.clone();
-    receipt.quantities = quantities.clone();
-    receipt.total_paid = total_price;
-    receipt.gas_fee = gas_fee;
-    receipt.status = status;
-    receipt.store = ctx.accounts.store.key();
-    receipt.buyer = ctx.accounts.buyer.key();
-    receipt.ts = Clock::get()?.unix_timestamp;
-
+    let product_count = product_uuids.len() as u8;
     emit!(CartPurchased {
         store_id: ctx.accounts.store.key(),
         buyer_id: ctx.accounts.buyer.key(),
@@ -200,7 +226,8 @@ pub fn purchase_cart<'info>(
         quantities,
         total_paid: total_price,
         gas_fee,
-        timestamp: receipt.ts,
+        timestamp: receipt.timestamp,
+        product_count,
     });
 
     Ok(())

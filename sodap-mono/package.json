@@ -4,19 +4,24 @@
   "license": "ISC",
   "scripts": {
     "postbuild": "./scripts/sync-idl.sh",
-    "dev": "anchor build && anchor localnet",
+    "dev": "./scripts/validator-manager.sh start && anchor build && anchor localnet",
     "build": "anchor build",
-    "test": "anchor test",
+    "test": "./scripts/run-anchor-test.sh",
+    "test:single": "./scripts/run-anchor-test.sh -t",
     "deploy": "anchor deploy",
     "lint:fix": "prettier */*.js */**/*{.js,.ts} -w",
     "lint": "prettier */*.js */**/*{.js,.ts} --check",
     "app:dev": "cd app && yarn dev",
     "app:build": "cd app && yarn build",
     "app:preview": "cd app && yarn preview",
-    "app:test": "cd app && yarn test"
+    "app:test": "cd app && yarn test",
+    "validator:start": "./scripts/validator-manager.sh start",
+    "validator:stop": "./scripts/validator-manager.sh stop",
+    "validator:restart": "./scripts/validator-manager.sh restart",
+    "validator:status": "./scripts/validator-manager.sh status"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1",
+    "@coral-xyz/anchor": "0.31.0",
     "@solana/pay": "^0.2.5",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.98.2",
@@ -25,12 +30,14 @@
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.0",
-    "@types/mocha": "^9.0.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.15.3",
     "chai": "^4.3.4",
     "mocha": "^11.2.2",
     "prettier": "^2.6.2",
     "ts-mocha": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3"
   }
 }

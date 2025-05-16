@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token;
+use bytemuck::{Pod, Zeroable};
+use crate::state::store::Store;
 
 // Declare the program ID used by Anchor
 declare_id!("4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv");
@@ -14,11 +16,51 @@ mod utils;
 pub use instructions::user_wallet::*;
 pub use utils::pda::*;
 
-// Define ProductAttribute type since it's not found in types.rs
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+// Define ProductAttribute type 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, Pod, Zeroable, Copy)]
+#[repr(C, align(8))]
 pub struct ProductAttribute {
-    pub name: String,
-    pub value: String,
+    pub name: [u8; 128],     // Fixed length 128 bytes
+    pub value: [u8; 128],    // Fixed length 128 bytes
+    pub _padding: [u8; 8],   // Padding for 8-byte alignment
+}
+
+impl Default for ProductAttribute {
+    fn default() -> Self {
+        ProductAttribute {
+            name: [0; 128],
+            value: [0; 128],
+            _padding: [0; 8],
+        }
+    }
+}
+
+impl ProductAttribute {
+    pub const LEN: usize = 50 + 200 + 6; // name + value + padding
+
+    pub fn new(name: &str, value: &str) -> Result<Self> {
+        require!(name.len() <= 50, CustomError::StringTooLong);
+        require!(value.len() <= 200, CustomError::StringTooLong);
+
+        let mut attr = ProductAttribute::default();
+        attr.name[..name.len()].copy_from_slice(name.as_bytes());
+        attr.value[..value.len()].copy_from_slice(value.as_bytes());
+        Ok(attr)
+    }
+
+    pub fn get_name(&self) -> String {
+        let nullpos = self.name.iter()
+            .position(|&x| x == 0)
+            .unwrap_or(self.name.len());
+        String::from_utf8_lossy(&self.name[..nullpos]).to_string()
+    }
+
+    pub fn get_value(&self) -> String {
+        let nullpos = self.value.iter()
+            .position(|&x| x == 0)
+            .unwrap_or(self.value.len());
+        String::from_utf8_lossy(&self.value[..nullpos]).to_string()
+    }
 }
 
 // Custom error types for validation
@@ -44,51 +86,73 @@ pub enum CustomError {
     InsufficientLoyaltyPoints,
     #[msg("Invalid redemption")]
     InvalidRedemption,
+    #[msg("String too long")]
+    StringTooLong,
 }
 
 // Define Escrow struct for payment handling
 #[account]
+#[derive(Copy, Pod, Zeroable)]
+#[repr(C)]
 pub struct Escrow {
     pub store: Pubkey,
     pub balance: u64,
 }
 
-// Define Store struct for our payment implementation
-#[account]
-pub struct Store {
-    pub owner: Pubkey,
-    pub name: String,
-    pub description: String,
-    pub logo_uri: String,
-    pub loyalty_config: types::LoyaltyConfig,
-    pub is_active: bool,
-    pub revenue: u64,
-    pub admin_roles: Vec<state::store::AdminRole>,
+impl Escrow {
+    pub const LEN: usize = Escrow::DISCRIMINATOR.len() + 32 + 8;
 }
 
 // Define LoyaltyMint struct for token management
 #[account]
+#[derive(Debug, Default)]
 pub struct LoyaltyMint {
-    pub store: Pubkey,
-    pub mint: Pubkey,
-    pub authority: Pubkey,
-    pub points_per_sol: u64,
-    pub redemption_rate: u64,
-    pub total_points_issued: u64,
-    pub total_points_redeemed: u64,
-    pub is_token2022: bool, // Flag to indicate if this is using token_interface
+    pub store: Pubkey,           // 32 bytes
+    pub mint: Pubkey,           // 32 bytes
+    pub authority: Pubkey,      // 32 bytes
+    pub points_per_sol: u64,    // 8 bytes
+    pub redemption_rate: u64,   // 8 bytes
+    pub total_points_issued: u64,     // 8 bytes
+    pub total_points_redeemed: u64,   // 8 bytes
+    pub is_token2022: bool,     // 1 byte
 }
 
-// Define Purchase struct for storing purchase records
+impl LoyaltyMint {
+    pub const LEN: usize = LoyaltyMint::DISCRIMINATOR.len() + 
+        32 +   // store
+        32 +   // mint
+        32 +   // authority
+        8 +    // points_per_sol
+        8 +    // redemption_rate
+        8 +    // total_points_issued
+        8 +    // total_points_redeemed
+        1;     // is_token2022
+}
+
+// Purchase struct with fixed arrays
 #[account]
+#[derive(Debug, Copy)]
+#[repr(C)]
 pub struct Purchase {
-    pub product_ids: Vec<Pubkey>,
-    pub quantities: Vec<u64>,
+    pub product_ids: [Pubkey; 10],  // Maximum 10 products per purchase
+    pub quantities: [u64; 10],      // Corresponding quantities
+    pub product_count: u8,          // Track actual number of products
+    pub _padding: [u8; 7],         // Add padding to ensure 8-byte alignment
     pub total_paid: u64,
     pub gas_fee: u64,
     pub store: Pubkey,
     pub buyer: Pubkey,
-    pub timestamp: i64,
+}
+
+impl Purchase {
+    pub const LEN: usize = Purchase::DISCRIMINATOR.len() + // discriminator
+        (32 * 10) + // product_ids array (10 Pubkeys)
+        (8 * 10) +  // quantities array (10 u64s)  
+        1 +         // product_count
+        8 +         // total_paid
+        8 +         // gas_fee
+        32 +        // store
+        32;         // buyer
 }
 
 // Declare a struct here to avoid using one from a module
@@ -97,7 +161,7 @@ pub struct RegisterStoreAccounts<'info> {
     #[account(
         init_if_needed, 
         payer = payer, 
-        space = 8 + 32 + 32 + 100 + 200 + 100 + 1 + 8 + 500, 
+        space = Store::DISCRIMINATOR.len() + Store::LEN,
         seeds = [b"store", authority.key().as_ref()], 
         bump
     )]
@@ -161,6 +225,7 @@ pub struct PurchaseCompleted {
 }
 
 #[derive(Accounts)]
+#[instruction(purchase_tag: u8)]
 pub struct PurchaseCartAccounts<'info> {
     // Store information
     #[account(mut)]
@@ -170,7 +235,9 @@ pub struct PurchaseCartAccounts<'info> {
     #[account(
         init,
         payer = buyer,
-        space = 8 + 32 + (4 + 10 * 32) + (4 + 10 * 8) + 8 + 8 + 32 + 32 + 8
+        space = Purchase::DISCRIMINATOR.len() + 32 + (32 * 10) + (8 * 10) + 1 + 8 + 8 + 32 + 32 + 8,
+        seeds = [b"purchase", buyer.key().as_ref(), &[purchase_tag]],
+        bump
     )]
     pub receipt: Account<'info, Purchase>,
 
@@ -187,7 +254,7 @@ pub struct PurchaseCartAccounts<'info> {
     #[account(
         init_if_needed,
         payer = buyer,
-        space = 8 + 32 + 8,
+        space = Escrow::DISCRIMINATOR.len() + 32 + 8,
         seeds = [b"escrow", store.key().as_ref()],
         bump
     )]
@@ -248,8 +315,14 @@ pub struct AddStoreAdminAccounts<'info> {
 
 #[derive(Accounts)]
 pub struct RemoveStoreAdminAccounts<'info> {
-    #[account(mut)]
-    pub payer: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [b"store", authority.key().as_ref()],
+        bump = store.bump,
+    )]
+    pub store: Account<'info, Store>,
+    /// The authority must be the store owner
+    pub authority: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -263,7 +336,7 @@ pub struct InitializeLoyaltyMintAccounts<'info> {
     #[account(
         init,
         payer = payer,
-        space = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 1,
+        space = LoyaltyMint::DISCRIMINATOR.len() + 32 + 32 + 32 + 8 + 8 + 8 + 8 + 1,
         seeds = [b"loyalty_mint", store.key().as_ref()],
         bump
     )]
@@ -478,12 +551,21 @@ pub mod sodap {
         store.loyalty_config = loyalty_config;
         store.is_active = true;
         store.revenue = 0;
-
-        // Initialize admin roles with the owner as the first admin with owner role
-        store.admin_roles = vec![state::store::AdminRole {
+        
+        // Initialize admin roles array with empty roles
+        store.admin_roles = core::array::from_fn(|_| state::store::AdminRole::default());
+        
+        // Set first admin as owner
+        store.admin_roles[0] = state::store::AdminRole {
             admin_pubkey: authority.key(),
             role_type: types::AdminRoleType::Owner {},
-        }];
+        };
+        store.admin_count = 1;
+
+        store.bump = ctx.bumps.store;
+        // Since there's no escrow account in this context, we'll set a placeholder
+        // This will be initialized properly when the escrow account is created
+        store.escrow_bump = 255;
 
         msg!("Store registered successfully");
         msg!("Owner: {:?}", store.owner);
@@ -660,13 +742,13 @@ pub mod sodap {
 
         // Update receipt
         let receipt = &mut ctx.accounts.receipt;
-        receipt.product_ids = product_ids.clone();
-        receipt.quantities = quantities.clone();
+        receipt.product_ids = product_ids.clone().try_into().unwrap_or([Pubkey::default(); 10]);
+        receipt.quantities = quantities.clone().try_into().unwrap_or([0; 10]);
+        receipt.product_count = product_ids.len() as u8;
         receipt.total_paid = total_price;
         receipt.gas_fee = 0; // For simplicity
         receipt.store = ctx.accounts.store.key();
         receipt.buyer = ctx.accounts.buyer.key();
-        receipt.timestamp = Clock::get()?.unix_timestamp;
 
         // Calculate loyalty points earned (if loyalty is enabled)
         let loyalty_points_earned = if ctx.accounts.loyalty_mint_info.is_some()
@@ -733,7 +815,7 @@ pub mod sodap {
             store: ctx.accounts.store.key(),
             buyer: ctx.accounts.buyer.key(),
             total_amount: total_price,
-            timestamp: receipt.timestamp,
+            timestamp: Clock::get()?.unix_timestamp,
             loyalty_points_earned,
         });
 
@@ -792,34 +874,68 @@ pub mod sodap {
             error::CustomError::Unauthorized
         );
         require!(authority.is_signer, error::CustomError::Unauthorized);
+        
+        // Check if we have space for a new admin
+        require!(
+            store.admin_count < 10,
+            CustomError::Unauthorized
+        );
 
         // Check if admin already exists
-        if store
-            .admin_roles
-            .iter()
-            .any(|r| r.admin_pubkey == admin_pubkey)
-        {
-            return Err(error::CustomError::AdminAlreadyExists.into());
+        for i in 0..store.admin_count {
+            if store.admin_roles[i as usize].admin_pubkey == admin_pubkey {
+                return Err(error::CustomError::AdminAlreadyExists.into());
+            }
         }
 
-        // Add the admin to the store's admin_roles vector
-        store.admin_roles.push(state::store::AdminRole {
+        // Add the new admin
+        let admin_index = store.admin_count as usize;
+        store.admin_roles[admin_index] = state::store::AdminRole {
             admin_pubkey,
             role_type: role,
-        });
+        };
+        store.admin_count += 1;
 
         msg!("Admin added successfully: {:?}", admin_pubkey);
         Ok(())
     }
 
     pub fn remove_store_admin(
-        ctx: Context<RemoveStoreAdminAccounts>,
+        ctx: Context<RemoveStoreAdminAccounts>, 
         store_id: Pubkey,
         admin_pubkey: Pubkey,
     ) -> Result<()> {
-        // Simplified implementation
-        msg!("Removing store admin: {:?}", admin_pubkey);
-        msg!("Store ID: {:?}", store_id);
+        let store = &mut ctx.accounts.store;
+        let authority = &ctx.accounts.authority;
+
+        // Verify authority is the store owner
+        require!(
+            authority.key() == store.owner,
+            error::CustomError::Unauthorized
+        );
+
+        // Verify the admin exists and get their role
+        let admin_role = store.get_admin_role(admin_pubkey)
+            .ok_or(error::CustomError::AdminNotFound)?;
+
+        // Prevent owner removal
+        require!(
+            !matches!(admin_role.role_type, types::AdminRoleType::Owner {}),
+            error::CustomError::CannotRemoveOwner
+        );
+
+        // Remove the admin
+        store.remove_admin(admin_pubkey)?;
+
+        msg!("Store admin removed successfully: {:?}", admin_pubkey);
+        
+        // Emit an event that the admin was removed
+        emit!(events::StoreAdminRemoved {
+            store: store_id,
+            admin: admin_pubkey,
+            removed_at: Clock::get()?.unix_timestamp,
+        });
+
         Ok(())
     }
 

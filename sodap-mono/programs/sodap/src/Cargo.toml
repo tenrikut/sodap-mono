@@ -30,6 +30,4 @@ opt-level = 3
 anchor-lang = { version = "0.31.0", features = ["init-if-needed"] }
 anchor-spl  = { version = "0.31.0", features = ["token", "token_2022"] }
 borsh = "0.10.3"
-bytemuck = { version = "1.13.1", features = ["derive"] }
-bytemuck_derive = "=1.8.1"
 solana-program = "=2.1.21"

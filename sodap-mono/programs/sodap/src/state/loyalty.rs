@@ -36,6 +36,7 @@ pub struct LoyaltyTokensMinted {
 
 // Account that stores information about the loyalty token mint
 #[account]
+#[derive(Debug, Default)]
 pub struct LoyaltyMint {
     pub store: Pubkey, // The store this mint is associated with
     pub mint: Pubkey,
@@ -45,6 +46,18 @@ pub struct LoyaltyMint {
     pub total_points_issued: u64,
     pub total_points_redeemed: u64,
     pub is_token2022: bool,
+}
+
+impl LoyaltyMint {
+    pub const LEN: usize = 8 + // discriminator
+        32 +    // store
+        32 +    // mint
+        32 +    // authority
+        8 +     // points_per_sol
+        8 +     // redemption_rate
+        8 +     // total_points_issued
+        8 +     // total_points_redeemed
+        1;      // is_token2022
 }
 
 // Context: Redeem loyalty tokens from the mint

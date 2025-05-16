@@ -1,0 +1,8 @@
+ # Anchor.toml for the `sodap` Anchor/Rust workspace
+ # ================================================
+ 
+ [toolchain]
+   package_manager = "yarn"
+
+[idl]
+outdir = "target/types"

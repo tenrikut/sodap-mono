@@ -1,5 +1,3 @@
-// Please add your error types here, or move the content from state/error.rs
-
 use anchor_lang::prelude::*;
 
 #[error_code]
@@ -74,4 +72,14 @@ pub enum CustomError {
     InvalidLoyaltyPoints,
     #[msg("Transfer hook error")]
     TransferHookError,
+    #[msg("Maximum number of admins reached")]
+    MaxAdminsReached,
+    #[msg("Invalid loyalty mint account")]
+    InvalidMint,
+    #[msg("Invalid redemption amount")]
+    InvalidRedemption,
+    #[msg("Insufficient escrow balance")]
+    InsufficientEscrowBalance,
+    #[msg("String is too long")]
+    StringTooLong,
 }

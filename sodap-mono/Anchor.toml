@@ -4,7 +4,7 @@
 [toolchain]
 # Use Yarn and Anchor 0.31.1
 package_manager = "yarn"
-anchor_version   = "0.31.0"
+anchor_version  = "0.31.0"
 
 [programs.localnet]
 # This must match the `declare_id!()` in your lib.rs
@@ -31,11 +31,17 @@ skip-lint  = true
 build     = "anchor build"
 # Deploy to localnet
 deploy    = "anchor deploy --provider.cluster localnet"
-# Run your on-chain tests
-test      = "anchor test"
+# Only run Rust tests, TS tests are handled by run-ts-tests.sh
+test      = "cargo test --package sodap"
 # After building, copy the generated IDL & TypeScript into your frontend
 postbuild = "mkdir -p app/src/idl && cp target/idl/sodap.json app/src/idl/sodap.json && cp target/types/sodap.ts app/src/idl/sodap.ts && echo 'Successfully synced IDL files to frontend'"
 
+[test]
+# Prevent double validator start
+startup_wait = 10000
+
 [test.validator]
-# Reset validator state before tests
+# Validator configuration for tests
+url = "http://127.0.0.1:8899"
+ledger = "./test-ledger"
 reset = true

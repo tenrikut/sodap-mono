@@ -16,19 +16,29 @@ pub fn create_or_update_user_profile(
     user_profile.authority = ctx.accounts.authority.key();
 
     if let Some(user_id) = user_id {
-        user_profile.user_id = user_id.clone();
+        require!(user_id.len() <= 32, CustomError::StringTooLong);
+        let mut user_id_bytes = [0u8; 32];
+        user_id_bytes[..user_id.len()].copy_from_slice(user_id.as_bytes());
+        user_profile.user_id = user_id_bytes;
+
         emit!(UserProfileUpdated {
             wallet_address: ctx.accounts.authority.key(),
-            user_id,
+            user_id: user_id,
             updated_at: Clock::get()?.unix_timestamp,
         });
     }
 
     if let Some(delivery_address) = delivery_address {
-        user_profile.delivery_address = delivery_address;
+        require!(delivery_address.len() <= 128, CustomError::StringTooLong);
+        let mut addr_bytes = [0u8; 128];
+        addr_bytes[..delivery_address.len()].copy_from_slice(delivery_address.as_bytes());
+        user_profile.delivery_address = addr_bytes;
+
         emit!(UserProfileUpdated {
             wallet_address: ctx.accounts.authority.key(),
-            user_id: user_profile.user_id.clone(),
+            user_id: String::from_utf8_lossy(&user_profile.user_id)
+                .trim_end_matches(char::from(0))
+                .to_string(),
             updated_at: Clock::get()?.unix_timestamp,
         });
     }
@@ -37,7 +47,9 @@ pub fn create_or_update_user_profile(
         user_profile.preferred_store = preferred_store;
         emit!(UserProfileUpdated {
             wallet_address: ctx.accounts.authority.key(),
-            user_id: user_profile.user_id.clone(),
+            user_id: String::from_utf8_lossy(&user_profile.user_id)
+                .trim_end_matches(char::from(0))
+                .to_string(),
             updated_at: Clock::get()?.unix_timestamp,
         });
     }
@@ -59,7 +71,9 @@ pub fn scan_and_purchase(
     user_profile.total_purchases += 1;
     emit!(UserProfileUpdated {
         wallet_address: ctx.accounts.authority.key(),
-        user_id: user_profile.user_id.clone(),
+        user_id: String::from_utf8_lossy(&user_profile.user_id)
+            .trim_end_matches(char::from(0))
+            .to_string(),
         updated_at: Clock::get()?.unix_timestamp,
     });
     Ok(())
