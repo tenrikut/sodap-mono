@@ -1,0 +1,52 @@
+# Anchor.toml for the `sodap` Anchor/Rust workspace
+# ================================================
+
+[toolchain]
+# Use Yarn and Anchor 0.31.1
+channel = "nightly"
+components = ["rustfmt", "clippy"]
+package_manager = "yarn"
+anchor_version  = "0.29.0"
+
+[programs.localnet]
+# This must match the `declare_id!()` in your lib.rs
+sodap = "4dCaSaq5kMeQntbfyGhNZ65udSataBGNZbhddFaogVfi"
+
+[provider]
+# Where to deploy and which keypair to use
+cluster    = "localnet"
+wallet     = "~/.config/solana/id.json"
+# (Optional) default commitment for RPC calls
+commitment = "processed"
+
+[registry]
+# If you're using a custom Anchor registry
+url = "https://api.apr.dev"
+
+[features]
+# Enable workspace resolution & skip linting
+resolution = true
+seeds      = false
+skip-lint  = false
+
+[scripts]
+# Build the BPF program
+build     = "anchor build"
+# Deploy to localnet
+deploy    = "anchor deploy --provider.cluster localnet"
+# Only run Rust tests, TS tests are handled by run-ts-tests.sh
+test      = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+# After building, copy the generated IDL & TypeScript into your frontend
+postbuild = "mkdir -p app/src/idl && cp target/idl/sodap.json app/src/idl/sodap.json && cp target/types/sodap.ts app/src/idl/sodap.ts && echo 'Successfully synced IDL files to frontend'"
+
+[test]
+# Prevent double validator start
+startup_wait = 8000
+
+[test.validator]
+# Use non-standard ports to avoid conflicts
+url = "http://127.0.0.1:8701"
+ledger = "./test-ledger"
+faucet_port = 8702
+test_port = 8701
+reset = true

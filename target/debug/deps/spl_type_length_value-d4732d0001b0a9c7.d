@@ -1,0 +1,9 @@
+/Users/miradil/sodap-mono/target/debug/deps/spl_type_length_value-d4732d0001b0a9c7.d: /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/error.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/length.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/state.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/variable_len_pack.rs
+
+/Users/miradil/sodap-mono/target/debug/deps/libspl_type_length_value-d4732d0001b0a9c7.rmeta: /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/error.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/length.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/state.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/variable_len_pack.rs
+
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/lib.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/error.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/length.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/state.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-type-length-value-0.3.0/src/variable_len_pack.rs:

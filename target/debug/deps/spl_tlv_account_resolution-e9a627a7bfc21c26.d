@@ -1,0 +1,9 @@
+/Users/miradil/sodap-mono/target/debug/deps/spl_tlv_account_resolution-e9a627a7bfc21c26.d: /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/account.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/error.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/seeds.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/state.rs
+
+/Users/miradil/sodap-mono/target/debug/deps/libspl_tlv_account_resolution-e9a627a7bfc21c26.rmeta: /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/account.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/error.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/seeds.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/state.rs
+
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/lib.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/account.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/error.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/seeds.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-tlv-account-resolution-0.4.0/src/state.rs:

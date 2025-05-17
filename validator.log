@@ -1,0 +1,6 @@
+error: Found argument '--ws-port' which wasn't expected, or isn't valid in this context
+
+USAGE:
+    solana-test-validator --ledger <DIR> --reset --rpc-port <PORT>
+
+For more information try --help

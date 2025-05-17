@@ -1,0 +1,1 @@
+{"rustc":9326499084633360552,"features":"","declared_features":"","target":0,"profile":0,"path":0,"deps":[[9705675356647965917,"build_script_build",false,12020816261896986914]],"local":[{"RerunIfChanged":{"output":"debug/build/rayon-core-d4ca109d3800e64c/output","paths":["build.rs"]}}],"rustflags":["-C","link-arg=-fuse-ld=/usr/bin/ld"],"config":0,"compile_kind":0}

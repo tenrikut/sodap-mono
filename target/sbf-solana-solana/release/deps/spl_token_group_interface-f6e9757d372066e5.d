@@ -1,0 +1,10 @@
+/Users/miradil/sodap-mono/target/sbf-solana-solana/release/deps/spl_token_group_interface-f6e9757d372066e5.so: /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/error.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/instruction.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/state.rs
+
+/Users/miradil/sodap-mono/target/sbf-solana-solana/release/deps/libspl_token_group_interface-f6e9757d372066e5.rlib: /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/error.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/instruction.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/state.rs
+
+/Users/miradil/sodap-mono/target/sbf-solana-solana/release/deps/spl_token_group_interface-f6e9757d372066e5.d: /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/error.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/instruction.rs /Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/state.rs
+
+/Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/lib.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/error.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/instruction.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-6f17d22bba15001f/spl-token-group-interface-0.1.0/src/state.rs:

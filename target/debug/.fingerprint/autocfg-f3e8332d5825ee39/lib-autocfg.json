@@ -1,0 +1,1 @@
+{"rustc":9326499084633360552,"features":"[]","declared_features":"[]","target":6962977057026645649,"profile":3033921117576893,"path":7337538039102233156,"deps":[],"local":[{"CheckDepInfo":{"dep_info":"debug/.fingerprint/autocfg-f3e8332d5825ee39/dep-lib-autocfg","checksum":false}}],"rustflags":["-C","link-arg=-fuse-ld=/usr/bin/ld"],"config":15564086925336547597,"compile_kind":0}

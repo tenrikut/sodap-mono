@@ -1,0 +1,10 @@
+/Users/miradil/sodap-mono/target/debug/deps/anchor_spl-a6c0578f82de2e0a.d: /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/associated_token.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/mint.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_2022.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_interface.rs
+
+/Users/miradil/sodap-mono/target/debug/deps/libanchor_spl-a6c0578f82de2e0a.rmeta: /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/lib.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/associated_token.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/mint.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_2022.rs /Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_interface.rs
+
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/lib.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/associated_token.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/mint.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_2022.rs:
+/Users/miradil/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_interface.rs:

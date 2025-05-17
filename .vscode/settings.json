@@ -1,0 +1,4 @@
+{
+  "git.ignoreLimitWarning": true,
+  "rust-analyzer.procMacro.enable": true
+}
