@@ -11,6 +11,9 @@
 - [Overview](#-overview)
 - [Key Features](#-key-features)
 - [Blockchain Features](#-blockchain-features)
+  - [Secure Store Management Using PDAs](#-secure-store-management-using-pdas)
+  - [On-Chain Data](#-on-chain-data)
+  - [Tested Functionalities (18 Passing Tests)](#-tested-functionalities-18-passing-tests)
 - [Getting Started](#-getting-started)
 - [Architecture](#-architecture)
 - [Development](#-development)
@@ -52,6 +55,36 @@ SoDap is a cutting-edge decentralized shopping platform powered by Solana blockc
 #### 🔗 On-Chain Data
 - Immutable product and store data for transparency.
 - Cryptographically secure transactions to ensure trust and reliability.
+
+#### 🧪 Tested Functionalities (18 Passing Tests)
+
+##### Admin Management
+1. **Add Admin**: Authorized addition of new admin accounts
+2. **Remove Admin**: Secure removal of admin privileges
+3. **Admin Authorization**: Proper verification of admin privileges
+4. **Unauthorized Admin Operations**: Correct rejection of unauthorized admin operations
+
+##### User Wallet Management
+5. **Create User Wallet**: Successful creation of new user wallets
+6. **Wallet Verification**: Proper verification of wallet ownership
+7. **Wallet Funding**: Automatic funding of test accounts with sufficient SOL
+
+##### Store Management
+8. **Register Store**: Creation of new stores with proper ownership
+9. **Update Store Metadata**: Secure updating of store information
+10. **Store Owner Verification**: Verification of store ownership for operations
+
+##### Product Management
+11. **Register Product**: Addition of new products to stores
+12. **Update Product**: Modification of existing product details
+13. **Deactivate Product**: Proper deactivation of products
+14. **Unauthorized Product Updates**: Rejection of unauthorized product modifications
+
+##### Payment Processing
+15. **Purchase Products**: Successful purchase of products with proper escrow
+16. **Release Funds**: Secure release of funds from escrow to store owner
+17. **Process Refunds**: Proper handling of refund requests
+18. **Insufficient Funds Handling**: Graceful handling of insufficient funds errors
 
 ---
 
