@@ -35,9 +35,10 @@ SoDap is a decentralized shopping platform powered by Solana blockchain. It aims
 
 ### ✨ Key Features
 
-#### 🔐 Secure Payment with Salana 
-- payment and refund
-- 
+#### 🔐 Secure Payment with Solana 
+- **Instant Settlement**: Payments settle in seconds vs. days in traditional systems
+- **Escrow Protection**: Smart contract escrow eliminates third parties and reduces fees
+- **Transparent Refunds**: On-chain verification provides faster dispute resolution
 
 #### 🔐 Authentication & User Management
 - Secure email/password  logins.
