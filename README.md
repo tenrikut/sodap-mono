@@ -24,7 +24,7 @@
 
 ### 🌟 Overview
 
-SoDap is a decentralized shopping platform powered by Solana blockchain. It aims to revolutionize in-store shopping by providing secure, transparent, and efficient shopping experiences for end users, store owners.
+SoDap is a decentralized shopping platform powered by the Solana blockchain. It aims to revolutionize in-store shopping by providing secure, transparent, and efficient shopping experiences for both customers and store owners through blockchain-based payment processing and store management.
 
 <div align="center">
   <img src="public/sodap-architecture.jpg" alt="  SoDap Architecture" width="800" style="border-radius: 10px;">
@@ -59,7 +59,6 @@ SoDap is a decentralized shopping platform powered by Solana blockchain. It aims
 - **Purchase Cart**: Process purchases with escrow-based payment protection
 - **Fund Release**: Securely transfer funds from escrow to store owners
 - **Refund Handling**: Process refunds with proper authorization checks
-- **Error Resilience**: Graceful handling of insufficient funds scenarios
 
 ---
 
@@ -107,51 +106,113 @@ SoDap is a decentralized shopping platform powered by Solana blockchain. It aims
 
 ---
 
-### 🚀 Getting Started
+### 💪 Getting Started
 
 #### Prerequisites:
-- Node.js 18+ and npm/yarn.
-- Solana Toolkit and wallet.
-- Anchor Framework for program development.
+- Node.js 18+ and npm/yarn
+- Solana CLI tools (`solana-cli`)
+- Anchor Framework 0.28.0 or higher
+- Solana wallet with devnet SOL (at least 1.0 SOL per test account)
 
 #### Installation:
 ```bash
 git clone https://github.com/tenrikut/sodap-mono.git
 cd sodap-mono
-npm install
+yarn install
 ```
 
 #### Development:
-- Use `npm run dev` for local development.
-- Spin up local Solana validators using `solana-test-validator`.
+- All tests are run on Solana devnet for realistic testing conditions
+- Use `anchor test --provider.cluster devnet` to run tests on devnet
+- Ensure your wallet has sufficient SOL (1.0 SOL per test account recommended)
 
 ---
 
-### 🛠️ Architecture
+### 🔧 Architecture
 
 #### Backend (Solana/Anchor)
-- Each store is uniquely identified and managed via a PDA.
-- Escrow accounts are tied to store PDAs for secure payments.
-- Product and purchase data are stored on-chain using Rust-based Solana programs.
+- **Program Architecture**: Rust-based Anchor program with modular instruction handlers
+- **Account Structure**: Uses PDAs (Program Derived Addresses) for deterministic account generation
+- **State Management**: Stores data in structured accounts with proper ownership validation
+- **Security Model**: Implements rigorous access control and transaction verification
+
+#### Program Structure
+```
+programs/
+├── sodap/
+│   ├── src/
+│   │   ├── lib.rs           # Main program entry point
+│   │   ├── admin.rs         # Admin management functionality
+│   │   ├── user.rs          # User wallet creation and verification
+│   │   ├── store.rs         # Store management operations
+│   │   ├── product.rs       # Product management operations
+│   │   ├── payment.rs       # Payment processing and escrow
+│   │   ├── errors.rs        # Custom error definitions
+│   │   └── state.rs         # Account state definitions
+│   └── Cargo.toml           # Rust dependencies
+└── tests/                   # Integration tests
+    ├── admin.ts             # Admin management tests
+    ├── create_wallet.ts     # User wallet tests
+    ├── store.ts             # Store management tests
+    ├── product.ts           # Product management tests
+    └── payment.ts           # Payment processing tests
+```
+
+#### Frontend (React/Vite)
+- **UI Framework**: React with Vite for fast development and optimized builds
+- **Wallet Integration**: Supports Phantom and other Solana wallets via wallet-adapter
+- **State Management**: Context-based state management for user sessions and cart
+- **Styling**: Modern UI with responsive design for all device types
+
+#### Frontend Structure
+```
+src/
+├── components/             # Reusable UI components
+│   ├── common/             # Shared components (buttons, inputs, etc.)
+│   ├── layout/             # Layout components (header, footer, etc.)
+│   ├── store/              # Store-related components
+│   └── product/            # Product-related components
+├── pages/                  # Application pages
+│   ├── Home.tsx            # Homepage
+│   ├── Store.tsx           # Store details page
+│   ├── Product.tsx         # Product details page
+│   ├── Cart.tsx            # Shopping cart
+│   └── Admin.tsx           # Admin dashboard
+├── hooks/                  # Custom React hooks
+│   ├── useWallet.ts        # Wallet connection hook
+│   └── useProgram.ts       # Solana program interaction hook
+├── context/                # React context providers
+│   ├── WalletContext.tsx   # Wallet connection context
+│   └── CartContext.tsx     # Shopping cart context
+├── utils/                  # Utility functions
+│   ├── program-interface.ts # Anchor program interface
+│   └── constants.ts        # Application constants
+└── App.tsx                 # Main application component
+```
 
 ---
 
-### 🛠️ Development
+### 🔧 Development
 
 #### Scripts:
-- `npm test` to run tests.
-- `anchor deploy` for program deployment.
+- `anchor build` to build the program
+- `anchor deploy --provider.cluster devnet` to deploy to devnet
+- `anchor test --provider.cluster devnet` to run all tests on devnet
+- `scripts/transfer-sol.js` to transfer SOL between wallets for testing
 
 ---
 
 ### 🤝 Contributing
 
-1. Fork the repository.
-2. Create feature branches.
-3. Submit pull requests.
+1. Fork the repository
+2. Create feature branches (`git checkout -b feature/amazing-feature`)
+3. Ensure all tests pass with `anchor test --provider.cluster devnet`
+4. Commit your changes (`git commit -m 'Add some amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 ---
 
-### 📄 License
+### 📝 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
