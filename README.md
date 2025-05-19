@@ -1,4 +1,4 @@
-# SoDap - Solana Decentralized Shopping Platform
+# SoDap - Scan to go decentralized shopping application in physical and online stores.
 
 <div align="center">
   <img src="sodap.png" alt="SoDap Logo" width="800" style="border-radius: 10px;">
