@@ -4,6 +4,7 @@ import { Sodap } from "../target/types/sodap";
 import { PublicKey, SystemProgram, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
 import { Buffer } from "buffer";
+import { fundMultipleTestAccounts } from "./utils/devnet-utils";
 
 describe("sodap admin", () => {
   // Configure the client to use the local cluster
@@ -25,36 +26,25 @@ describe("sodap admin", () => {
   const ROOT_PASSWORD = "password"; // In a real app, this would be more secure
   
   before(async () => {
-    // Airdrop SOL to super admin
-    const signature = await provider.connection.requestAirdrop(
-      superAdmin.publicKey, 
-      10 * LAMPORTS_PER_SOL
-    );
-    const latestBlockHash = await provider.connection.getLatestBlockhash();
-    await provider.connection.confirmTransaction({
-      signature: signature,
-      ...latestBlockHash,
-    });
-    
-    // Airdrop SOL to new admin
-    const newAdminSignature = await provider.connection.requestAirdrop(
-      newAdmin.publicKey, 
-      LAMPORTS_PER_SOL
-    );
-    await provider.connection.confirmTransaction({
-      signature: newAdminSignature,
-      ...latestBlockHash,
-    });
-    
-    // Airdrop SOL to unauthorized user
-    const unauthorizedSignature = await provider.connection.requestAirdrop(
-      unauthorizedUser.publicKey, 
-      LAMPORTS_PER_SOL
-    );
-    await provider.connection.confirmTransaction({
-      signature: unauthorizedSignature,
-      ...latestBlockHash,
-    });
+    // Fund test accounts from the provider wallet instead of using airdrops
+    // This approach works better on devnet where airdrops are rate-limited
+    console.log("Funding test accounts from provider wallet...");
+    try {
+      await fundMultipleTestAccounts(
+        provider, 
+        [
+          superAdmin,
+          newAdmin,
+          unauthorizedUser
+        ],
+        1 // 1 SOL each
+      );
+      console.log("Successfully funded all test accounts");
+    } catch (error) {
+      console.error("Error funding test accounts:", error);
+      // Continue with the test even if funding fails
+      // The test might still work if the accounts already have funds
+    }
     
     // Derive platform admins PDA
     const [platformAdminsKey] = PublicKey.findProgramAddressSync(

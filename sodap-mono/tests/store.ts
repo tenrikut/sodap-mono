@@ -3,6 +3,7 @@ import { Program,utils } from "@coral-xyz/anchor";
 import { Sodap } from "../target/types/sodap";
 import { PublicKey, SystemProgram, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { assert } from "chai";
+import { fundMultipleTestAccounts } from "./utils/devnet-utils";
 
 
 
@@ -22,14 +23,22 @@ describe("sodap store", () => {
   const TEST_STORE_LOGO = "https://example.com/logo.png";
 
   before(async () => {
-
-    // Airdrop SOL to owner
-    const signature = await provider.connection.requestAirdrop(owner.publicKey,10*LAMPORTS_PER_SOL);
-    const latestBlockHash = await provider.connection.getLatestBlockhash();
-    await provider.connection.confirmTransaction(await provider.connection.getLatestBlockhash().
-    then(h => ({ signature: signature, ...latestBlockHash }))
-      
-    );
+    // Fund test accounts from the provider wallet instead of using airdrops
+    // This approach works better on devnet where airdrops are rate-limited
+    console.log("Funding test accounts from provider wallet...");
+    try {
+      await fundMultipleTestAccounts(
+        provider, 
+        [
+          owner
+        ],
+        0.1 // 0.1 SOL each should be sufficient for tests
+      );
+      console.log("Successfully funded all test accounts");
+    } catch (error) {
+      console.error("Error funding test accounts:", error);
+      throw error; // Fail the test if funding fails
+    }
 
     // Use hardcoded PDA that matches program's expectation
     storePda = new PublicKey("BhfGKfh5wAGoHdSDbcNg5DCyaySRmCtw2rsBjFUfcodS");
@@ -47,33 +56,40 @@ describe("sodap store", () => {
     );
     escrowPda = escrowKey;
     console.log("Escrow PDA:", escrowPda.toBase58());
-
-    // Airdrop more SOL to ensure enough for all transactions
-    const signature2 = await provider.connection.requestAirdrop(owner.publicKey, 10 * LAMPORTS_PER_SOL);
-    const latestBlockHash2 = await provider.connection.getLatestBlockhash();
-    await provider.connection.confirmTransaction({
-      signature: signature2,
-      ...latestBlockHash2,
-    });
   });
 
   it("registers a new store", async () => {
     // Register store using Anchor's built-in methods
-    await program.methods
-      .registerStore(
-        TEST_STORE_NAME,
-        TEST_STORE_DESC,
-        TEST_STORE_LOGO
-      )
-      .accounts({
-        store: storePda,
-        escrow: escrowPda,
-        owner: owner.publicKey,
-        payer: owner.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([owner])
-      .rpc();
+    try {
+      console.log("Registering store with owner:", owner.publicKey.toBase58());
+      console.log("Store PDA:", storePda.toBase58());
+      console.log("Escrow PDA:", escrowPda.toBase58());
+      
+      // Check owner balance before creating store
+      const ownerBalance = await provider.connection.getBalance(owner.publicKey);
+      console.log("Owner balance before creating store:", ownerBalance / LAMPORTS_PER_SOL, "SOL");
+      
+      await program.methods
+        .registerStore(
+          TEST_STORE_NAME,
+          TEST_STORE_DESC,
+          TEST_STORE_LOGO
+        )
+        .accounts({
+          store: storePda,
+          escrow: escrowPda,
+          owner: owner.publicKey,
+          payer: owner.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([owner])
+        .rpc();
+      
+      console.log("Store registered successfully");
+    } catch (error) {
+      console.error("Error registering store:", error);
+      throw error;
+    }
     console.log("Update signer:", owner.publicKey.toBase58());
 
     // Fetch and verify store data
@@ -114,24 +130,37 @@ describe("sodap store", () => {
 
   it("prevents unauthorized store updates", async () => {
     // First register a store using Anchor's built-in methods
-    await program.methods
-      .registerStore(TEST_STORE_NAME, TEST_STORE_DESC, TEST_STORE_LOGO)
-      .accounts({
-        store: storePda,
-        escrow: escrowPda,
-        owner: owner.publicKey,
-        payer: owner.publicKey,
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([owner])
-      .rpc();
+    try {
+      console.log("Registering store again for unauthorized test...");
+      await program.methods
+        .registerStore(TEST_STORE_NAME, TEST_STORE_DESC, TEST_STORE_LOGO)
+        .accounts({
+          store: storePda,
+          escrow: escrowPda,
+          owner: owner.publicKey,
+          payer: owner.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([owner])
+        .rpc();
+      
+      console.log("Store registered successfully for unauthorized test");
+    } catch (error) {
+      console.log("Expected error during store registration for unauthorized test:", error.message);
+      // Continue with the test even if this fails
+      // The store might already exist from previous tests
+    }
 
     // Try to update with a different signer using Anchor's built-in methods
     const unauthorizedUser = Keypair.generate();
     try {
-      // Airdrop SOL to unauthorized user
-      const unAuthSig = await provider.connection.requestAirdrop(unauthorizedUser.publicKey, LAMPORTS_PER_SOL);
-      await provider.connection.confirmTransaction(unAuthSig);
+        // Fund the unauthorized user
+      await fundMultipleTestAccounts(provider, [unauthorizedUser], 0.5);
+      console.log("Funded unauthorized user for testing");
+      
+      // Check unauthorized user balance
+      const unauthorizedUserBalance = await provider.connection.getBalance(unauthorizedUser.publicKey);
+      console.log("Unauthorized user balance:", unauthorizedUserBalance / LAMPORTS_PER_SOL, "SOL");
       
       // Attempt unauthorized update
       await program.methods
@@ -144,6 +173,7 @@ describe("sodap store", () => {
         .accounts({
           store: storePda,
           owner: unauthorizedUser.publicKey,
+          payer: unauthorizedUser.publicKey, // Explicitly add payer
           systemProgram: SystemProgram.programId,
         })
         .signers([unauthorizedUser])

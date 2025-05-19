@@ -1,27 +1,13 @@
 #!/bin/bash
-# Script to run a single test file on devnet
 
-echo "===== Sodap Devnet Single Test Runner ====="
-echo "Starting test on Solana devnet: $1"
+echo "===== Sodap Devnet Test Runner ====="
+echo "Starting tests on Solana devnet..."
 
 # Set Anchor environment variables
 export ANCHOR_PROVIDER_URL="https://api.devnet.solana.com"
 export ANCHOR_WALLET="$HOME/.config/solana/id.json"
 echo "Using provider URL: $ANCHOR_PROVIDER_URL"
 echo "Using wallet: $ANCHOR_WALLET"
-
-# Check if a test file was provided
-if [ -z "$1" ]; then
-  echo "Error: No test file specified"
-  echo "Usage: ./run-single-test.sh tests/admin.ts"
-  exit 1
-fi
-
-# Check if the test file exists
-if [ ! -f "$1" ]; then
-  echo "Error: Test file not found: $1"
-  exit 1
-fi
 
 # Check if the wallet exists
 if [ ! -f "$ANCHOR_WALLET" ]; then
@@ -46,18 +32,23 @@ fi
 echo "Wallet balance: $BALANCE"
 echo "This wallet will be used to fund test accounts."
 
-# Run the specific test file with increased timeout
-echo "\nRunning test with increased timeout (1000s)..."
-echo "Test file: $1"
+# Run the tests with increased timeout
+echo "\nRunning tests with increased timeout (1000s)..."
+echo "Tests will be executed in the following order:"
+echo "1. Admin tests"
+echo "2. User wallet tests"
+echo "3. Store tests"
+echo "4. Product tests"
+echo "5. Payment tests"
 echo "\n===== Test Execution Starting ====="
 
-npx ts-mocha -p ./tsconfig.json -t 1000000 "$1"
+npx ts-mocha -p ./tsconfig.json -t 1000000 tests/admin.ts tests/create_wallet.ts tests/store.ts tests/product.ts tests/payment.ts
 
 TEST_RESULT=$?
 
 if [ $TEST_RESULT -eq 0 ]; then
-  echo "\n===== Test completed successfully! ====="
+  echo "\n===== All tests completed successfully! ====="
 else
-  echo "\n===== Test completed with errors. Exit code: $TEST_RESULT ====="
+  echo "\n===== Tests completed with errors. Exit code: $TEST_RESULT ====="
   echo "Check the output above for specific test failures."
 fi

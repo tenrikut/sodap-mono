@@ -971,43 +971,183 @@ export type Sodap = {
   "errors": [
     {
       "code": 6000,
-      "name": "invalidStoreId",
-      "msg": "Invalid store id"
-    },
-    {
-      "code": 6001,
       "name": "tooManyAdmins",
       "msg": "Too many admins. Maximum allowed is 10"
     },
     {
+      "code": 6001,
+      "name": "invalidPrice",
+      "msg": "Invalid price"
+    },
+    {
       "code": 6002,
-      "name": "insufficientEscrowBalance",
-      "msg": "Insufficient escrow balance"
+      "name": "invalidStock",
+      "msg": "Invalid stock"
     },
     {
       "code": 6003,
-      "name": "tooManyProducts",
-      "msg": "Too many products in purchase. Maximum allowed is 10"
+      "name": "outOfStock",
+      "msg": "Product is out of stock"
     },
     {
       "code": 6004,
-      "name": "invalidPurchase",
-      "msg": "Invalid purchase: number of products does not match quantities"
+      "name": "insufficientPayment",
+      "msg": "Insufficient payment"
     },
     {
       "code": 6005,
-      "name": "unauthorized",
-      "msg": "Unauthorized access"
+      "name": "stockUnderflow",
+      "msg": "Stock underflow"
     },
     {
       "code": 6006,
-      "name": "invalidCart",
-      "msg": "Invalid cart"
+      "name": "unauthorized",
+      "msg": "unauthorized"
     },
     {
       "code": 6007,
+      "name": "cartEmpty",
+      "msg": "Cart is empty"
+    },
+    {
+      "code": 6008,
+      "name": "invalidCart",
+      "msg": "Invalid cart (mismatched product and quantity arrays)"
+    },
+    {
+      "code": 6009,
+      "name": "productNotFound",
+      "msg": "Product not found"
+    },
+    {
+      "code": 6010,
+      "name": "insufficientStock",
+      "msg": "Insufficient stock"
+    },
+    {
+      "code": 6011,
+      "name": "priceOverflow",
+      "msg": "Price overflow when summing cart"
+    },
+    {
+      "code": 6012,
+      "name": "cartTooLarge",
+      "msg": "Cart too large"
+    },
+    {
+      "code": 6013,
+      "name": "adminAlreadyExists",
+      "msg": "Admin already exists"
+    },
+    {
+      "code": 6014,
+      "name": "cannotRemoveOwner",
+      "msg": "Cannot remove owner"
+    },
+    {
+      "code": 6015,
+      "name": "storeNotFound",
+      "msg": "Store not found"
+    },
+    {
+      "code": 6016,
+      "name": "unauthorizedStoreAccess",
+      "msg": "Unauthorized store access"
+    },
+    {
+      "code": 6017,
+      "name": "adminNotFound",
+      "msg": "Admin not found"
+    },
+    {
+      "code": 6018,
+      "name": "userNotFound",
+      "msg": "User not found"
+    },
+    {
+      "code": 6019,
       "name": "arithmeticError",
       "msg": "Arithmetic error"
+    },
+    {
+      "code": 6020,
+      "name": "invalidStoreId",
+      "msg": "Invalid store ID"
+    },
+    {
+      "code": 6021,
+      "name": "invalidProductId",
+      "msg": "Invalid product ID"
+    },
+    {
+      "code": 6022,
+      "name": "invalidAdminId",
+      "msg": "Invalid admin ID"
+    },
+    {
+      "code": 6023,
+      "name": "invalidLoyaltyConfig",
+      "msg": "Invalid loyalty configuration"
+    },
+    {
+      "code": 6024,
+      "name": "storeInactive",
+      "msg": "Store is inactive"
+    },
+    {
+      "code": 6025,
+      "name": "insufficientLoyaltyPoints",
+      "msg": "Insufficient loyalty points"
+    },
+    {
+      "code": 6026,
+      "name": "loyaltyProgramInactive",
+      "msg": "Loyalty program is inactive"
+    },
+    {
+      "code": 6027,
+      "name": "invalidParameters",
+      "msg": "Invalid parameters"
+    },
+    {
+      "code": 6028,
+      "name": "insufficientFunds",
+      "msg": "Insufficient funds"
+    },
+    {
+      "code": 6029,
+      "name": "invalidMetadataUri",
+      "msg": "Invalid metadata URI"
+    },
+    {
+      "code": 6030,
+      "name": "invalidAdminRole",
+      "msg": "Invalid admin role"
+    },
+    {
+      "code": 6031,
+      "name": "invalidStore",
+      "msg": "Invalid store"
+    },
+    {
+      "code": 6032,
+      "name": "escrowNotFound",
+      "msg": "Escrow account not found"
+    },
+    {
+      "code": 6033,
+      "name": "loyaltyMintNotFound",
+      "msg": "Loyalty mint not found"
+    },
+    {
+      "code": 6034,
+      "name": "invalidLoyaltyPoints",
+      "msg": "Invalid loyalty points"
+    },
+    {
+      "code": 6035,
+      "name": "transferHookError",
+      "msg": "Transfer hook error"
     }
   ],
   "types": [

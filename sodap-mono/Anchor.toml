@@ -7,7 +7,7 @@ anchor_version = "0.31.1"
 solana_version = "2.1.0"
 
 
-[programs.localnet]
+[programs.devnet]
 # This must match the `declare_id!()` in your lib.rs
 sodap = "DbsYHoEr7q4mqJMTrp7iEiXiCD9WPP8c39kPhJShTKMa"
 
@@ -33,10 +33,10 @@ no-entrypoint = true
 [scripts]
 # Build the BPF program
 build     = "anchor build"
-# Deploy to localnet
-deploy    = "anchor deploy --provider.cluster localnet"
+# Deploy to devnet
+deploy    = "anchor deploy --provider.cluster devnet"
 # Run your on-chain tests
-test      = "anchor run test-script"
+test      = "anchor test"
 # After building, copy the generated IDL & TypeScript into your frontend
 postbuild = "mkdir -p app/src/idl && cp target/idl/sodap.json app/src/idl/sodap.json && cp target/types/sodap.ts app/src/idl/sodap.ts && echo 'Successfully synced IDL files to frontend'"
 
