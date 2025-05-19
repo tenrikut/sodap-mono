@@ -6,6 +6,9 @@
 </div>
 
 ---
+### 🌟 Overview
+
+SoDap is a decentralized shopping platform powered by the Solana blockchain. It aims to revolutionize in-store shopping by providing secure, transparent, and efficient shopping experiences for both customers and store owners through blockchain-based payment processing and store management.
 
 ### 📖 Table of Contents
 - [Overview](#-overview)
@@ -21,10 +24,6 @@
 - [License](#-license)
 
 ---
-
-### 🌟 Overview
-
-SoDap is a decentralized shopping platform powered by the Solana blockchain. It aims to revolutionize in-store shopping by providing secure, transparent, and efficient shopping experiences for both customers and store owners through blockchain-based payment processing and store management.
 
 ---
 
