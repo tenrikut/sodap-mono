@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="sodap.png" alt="SoDap Logo" width="800" style="border-radius: 10px;">
-  <h3>Decentralized E-Commerce Powered by Solana Blockchain</h3>
+  <h3>Decentralized Shopping </h3>
 </div>
 
 ---
