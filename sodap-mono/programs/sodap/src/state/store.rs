@@ -98,14 +98,15 @@ pub struct AdminRole {
 pub struct RegisterStore<'info> {
     #[account(
         init,
-        payer = authority,
+        payer = payer,
         space = Store::LEN,
-        seeds = [b"store", authority.key().as_ref()],
+        seeds = [b"store", owner.key().as_ref()],
         bump
     )]
     pub store: Account<'info, Store>,
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub payer: Signer<'info>,
+    pub owner: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -120,6 +121,7 @@ pub struct UpdateStore<'info> {
     )]
     pub store: Account<'info, Store>,
     pub owner: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]

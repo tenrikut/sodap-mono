@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/sodap.json`.
  */
 export type Sodap = {
-  "address": "4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv",
+  "address": "DbsYHoEr7q4mqJMTrp7iEiXiCD9WPP8c39kPhJShTKMa",
   "metadata": {
     "name": "sodap",
     "version": "0.1.0",
@@ -235,36 +235,6 @@ export type Sodap = {
       ]
     },
     {
-      "name": "handleTransferHook",
-      "discriminator": [
-        190,
-        171,
-        237,
-        164,
-        179,
-        74,
-        238,
-        183
-      ],
-      "accounts": [
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
-    },
-    {
       "name": "initialize",
       "discriminator": [
         175,
@@ -288,171 +258,6 @@ export type Sodap = {
         }
       ],
       "args": []
-    },
-    {
-      "name": "initializeLoyaltyMint",
-      "discriminator": [
-        124,
-        218,
-        206,
-        49,
-        20,
-        69,
-        141,
-        248
-      ],
-      "accounts": [
-        {
-          "name": "store",
-          "writable": true
-        },
-        {
-          "name": "loyaltyMintAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  108,
-                  111,
-                  121,
-                  97,
-                  108,
-                  116,
-                  121,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "store"
-              }
-            ]
-          }
-        },
-        {
-          "name": "tokenMint",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "payer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "rent",
-          "address": "SysvarRent111111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "pointsPerSol",
-          "type": "u64"
-        },
-        {
-          "name": "redemptionRate",
-          "type": "u64"
-        },
-        {
-          "name": "useToken2022",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "mintLoyaltyPoints",
-      "discriminator": [
-        179,
-        168,
-        105,
-        41,
-        246,
-        68,
-        35,
-        120
-      ],
-      "accounts": [
-        {
-          "name": "store",
-          "writable": true
-        },
-        {
-          "name": "loyaltyMintAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  108,
-                  111,
-                  121,
-                  97,
-                  108,
-                  116,
-                  121,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "store"
-              }
-            ]
-          }
-        },
-        {
-          "name": "tokenMint",
-          "writable": true
-        },
-        {
-          "name": "tokenAccount",
-          "writable": true
-        },
-        {
-          "name": "mintAuthority",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "recipient"
-        },
-        {
-          "name": "buyer"
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "purchaseAmountLamports",
-          "type": "u64"
-        }
-      ]
     },
     {
       "name": "purchaseCart",
@@ -509,57 +314,6 @@ export type Sodap = {
           }
         },
         {
-          "name": "loyaltyMintInfo",
-          "writable": true,
-          "optional": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  108,
-                  111,
-                  121,
-                  97,
-                  108,
-                  116,
-                  121,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "store"
-              }
-            ]
-          }
-        },
-        {
-          "name": "tokenMint",
-          "writable": true,
-          "optional": true
-        },
-        {
-          "name": "tokenAccount",
-          "writable": true,
-          "optional": true
-        },
-        {
-          "name": "mintAuthority",
-          "writable": true,
-          "signer": true,
-          "optional": true
-        },
-        {
-          "name": "tokenProgram",
-          "optional": true,
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
@@ -580,108 +334,6 @@ export type Sodap = {
         {
           "name": "totalAmountPaid",
           "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "redeemLoyaltyPoints",
-      "discriminator": [
-        187,
-        195,
-        185,
-        155,
-        179,
-        96,
-        149,
-        0
-      ],
-      "accounts": [
-        {
-          "name": "store",
-          "writable": true
-        },
-        {
-          "name": "loyaltyMintAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  108,
-                  111,
-                  121,
-                  97,
-                  108,
-                  116,
-                  121,
-                  95,
-                  109,
-                  105,
-                  110,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "store"
-              }
-            ]
-          }
-        },
-        {
-          "name": "tokenMint",
-          "writable": true
-        },
-        {
-          "name": "tokenAccount",
-          "writable": true
-        },
-        {
-          "name": "user",
-          "signer": true
-        },
-        {
-          "name": "escrowAccount",
-          "writable": true,
-          "optional": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "store"
-              }
-            ]
-          }
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "pointsToRedeem",
-          "type": "u64"
-        },
-        {
-          "name": "redeemForSol",
-          "type": "bool"
         }
       ]
     },
@@ -872,14 +524,6 @@ export type Sodap = {
         {
           "name": "logoUri",
           "type": "string"
-        },
-        {
-          "name": "loyaltyConfig",
-          "type": {
-            "defined": {
-              "name": "loyaltyConfig"
-            }
-          }
         }
       ]
     },
@@ -902,31 +546,11 @@ export type Sodap = {
         },
         {
           "name": "storeOwner",
-          "writable": true,
-          "signer": true
+          "writable": true
         },
         {
           "name": "escrowAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "store"
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "systemProgram",
@@ -1167,16 +791,6 @@ export type Sodap = {
           "type": {
             "option": "string"
           }
-        },
-        {
-          "name": "loyaltyConfig",
-          "type": {
-            "option": {
-              "defined": {
-                "name": "loyaltyConfig"
-              }
-            }
-          }
         }
       ]
     }
@@ -1193,19 +807,6 @@ export type Sodap = {
         22,
         218,
         155
-      ]
-    },
-    {
-      "name": "loyaltyMint",
-      "discriminator": [
-        121,
-        219,
-        194,
-        140,
-        80,
-        187,
-        176,
-        112
       ]
     },
     {
@@ -1286,45 +887,6 @@ export type Sodap = {
         127,
         200,
         205
-      ]
-    },
-    {
-      "name": "loyaltyPointsEarned",
-      "discriminator": [
-        124,
-        20,
-        28,
-        29,
-        94,
-        218,
-        175,
-        31
-      ]
-    },
-    {
-      "name": "loyaltyPointsRedeemed",
-      "discriminator": [
-        23,
-        105,
-        3,
-        227,
-        115,
-        164,
-        155,
-        2
-      ]
-    },
-    {
-      "name": "loyaltyTokensMinted",
-      "discriminator": [
-        33,
-        246,
-        193,
-        3,
-        190,
-        56,
-        188,
-        46
       ]
     },
     {
@@ -1409,176 +971,181 @@ export type Sodap = {
   "errors": [
     {
       "code": 6000,
+      "name": "tooManyAdmins",
+      "msg": "Too many admins. Maximum allowed is 10"
+    },
+    {
+      "code": 6001,
       "name": "invalidPrice",
       "msg": "Invalid price"
     },
     {
-      "code": 6001,
+      "code": 6002,
       "name": "invalidStock",
       "msg": "Invalid stock"
     },
     {
-      "code": 6002,
+      "code": 6003,
       "name": "outOfStock",
       "msg": "Product is out of stock"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "insufficientPayment",
       "msg": "Insufficient payment"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "stockUnderflow",
       "msg": "Stock underflow"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "unauthorized",
       "msg": "unauthorized"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "cartEmpty",
       "msg": "Cart is empty"
     },
     {
-      "code": 6007,
+      "code": 6008,
       "name": "invalidCart",
       "msg": "Invalid cart (mismatched product and quantity arrays)"
     },
     {
-      "code": 6008,
+      "code": 6009,
       "name": "productNotFound",
       "msg": "Product not found"
     },
     {
-      "code": 6009,
+      "code": 6010,
       "name": "insufficientStock",
       "msg": "Insufficient stock"
     },
     {
-      "code": 6010,
+      "code": 6011,
       "name": "priceOverflow",
       "msg": "Price overflow when summing cart"
     },
     {
-      "code": 6011,
+      "code": 6012,
       "name": "cartTooLarge",
       "msg": "Cart too large"
     },
     {
-      "code": 6012,
+      "code": 6013,
       "name": "adminAlreadyExists",
       "msg": "Admin already exists"
     },
     {
-      "code": 6013,
+      "code": 6014,
       "name": "cannotRemoveOwner",
       "msg": "Cannot remove owner"
     },
     {
-      "code": 6014,
+      "code": 6015,
       "name": "storeNotFound",
       "msg": "Store not found"
     },
     {
-      "code": 6015,
+      "code": 6016,
       "name": "unauthorizedStoreAccess",
       "msg": "Unauthorized store access"
     },
     {
-      "code": 6016,
+      "code": 6017,
       "name": "adminNotFound",
       "msg": "Admin not found"
     },
     {
-      "code": 6017,
+      "code": 6018,
       "name": "userNotFound",
       "msg": "User not found"
     },
     {
-      "code": 6018,
+      "code": 6019,
       "name": "arithmeticError",
       "msg": "Arithmetic error"
     },
     {
-      "code": 6019,
+      "code": 6020,
       "name": "invalidStoreId",
       "msg": "Invalid store ID"
     },
     {
-      "code": 6020,
+      "code": 6021,
       "name": "invalidProductId",
       "msg": "Invalid product ID"
     },
     {
-      "code": 6021,
+      "code": 6022,
       "name": "invalidAdminId",
       "msg": "Invalid admin ID"
     },
     {
-      "code": 6022,
+      "code": 6023,
       "name": "invalidLoyaltyConfig",
       "msg": "Invalid loyalty configuration"
     },
     {
-      "code": 6023,
+      "code": 6024,
       "name": "storeInactive",
       "msg": "Store is inactive"
     },
     {
-      "code": 6024,
+      "code": 6025,
       "name": "insufficientLoyaltyPoints",
       "msg": "Insufficient loyalty points"
     },
     {
-      "code": 6025,
+      "code": 6026,
       "name": "loyaltyProgramInactive",
       "msg": "Loyalty program is inactive"
     },
     {
-      "code": 6026,
+      "code": 6027,
       "name": "invalidParameters",
       "msg": "Invalid parameters"
     },
     {
-      "code": 6027,
+      "code": 6028,
       "name": "insufficientFunds",
       "msg": "Insufficient funds"
     },
     {
-      "code": 6028,
+      "code": 6029,
       "name": "invalidMetadataUri",
       "msg": "Invalid metadata URI"
     },
     {
-      "code": 6029,
+      "code": 6030,
       "name": "invalidAdminRole",
       "msg": "Invalid admin role"
     },
     {
-      "code": 6030,
+      "code": 6031,
       "name": "invalidStore",
       "msg": "Invalid store"
     },
     {
-      "code": 6031,
+      "code": 6032,
       "name": "escrowNotFound",
       "msg": "Escrow account not found"
     },
     {
-      "code": 6032,
+      "code": 6033,
       "name": "loyaltyMintNotFound",
       "msg": "Loyalty mint not found"
     },
     {
-      "code": 6033,
+      "code": 6034,
       "name": "invalidLoyaltyPoints",
       "msg": "Invalid loyalty points"
     },
     {
-      "code": 6034,
+      "code": 6035,
       "name": "transferHookError",
       "msg": "Transfer hook error"
     }
@@ -1734,146 +1301,6 @@ export type Sodap = {
       }
     },
     {
-      "name": "loyaltyConfig",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "pointsPerDollar",
-            "type": "u64"
-          },
-          {
-            "name": "redemptionRate",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "loyaltyMint",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "store",
-            "type": "pubkey"
-          },
-          {
-            "name": "mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "authority",
-            "type": "pubkey"
-          },
-          {
-            "name": "pointsPerSol",
-            "type": "u64"
-          },
-          {
-            "name": "redemptionRate",
-            "type": "u64"
-          },
-          {
-            "name": "totalPointsIssued",
-            "type": "u64"
-          },
-          {
-            "name": "totalPointsRedeemed",
-            "type": "u64"
-          },
-          {
-            "name": "isToken2022",
-            "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "loyaltyPointsEarned",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "storeId",
-            "type": "pubkey"
-          },
-          {
-            "name": "pointsEarned",
-            "type": "u64"
-          },
-          {
-            "name": "totalPoints",
-            "type": "u64"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "loyaltyPointsRedeemed",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "storeId",
-            "type": "pubkey"
-          },
-          {
-            "name": "pointsRedeemed",
-            "type": "u64"
-          },
-          {
-            "name": "discountValue",
-            "type": "u64"
-          },
-          {
-            "name": "remainingPoints",
-            "type": "u64"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "loyaltyTokensMinted",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "pubkey"
-          },
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "remainingPoints",
-            "type": "u64"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
       "name": "platformAdminAdded",
       "type": {
         "kind": "struct",
@@ -1981,10 +1408,6 @@ export type Sodap = {
           {
             "name": "timestamp",
             "type": "i64"
-          },
-          {
-            "name": "loyaltyPointsEarned",
-            "type": "u64"
           }
         ]
       }
@@ -2011,20 +1434,20 @@ export type Sodap = {
             "type": "string"
           },
           {
-            "name": "loyaltyConfig",
-            "type": {
-              "defined": {
-                "name": "loyaltyConfig"
-              }
-            }
-          },
-          {
             "name": "isActive",
             "type": "bool"
           },
           {
             "name": "revenue",
             "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "escrowBump",
+            "type": "u8"
           },
           {
             "name": "adminRoles",

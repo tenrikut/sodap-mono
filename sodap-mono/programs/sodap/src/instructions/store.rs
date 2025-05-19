@@ -11,9 +11,9 @@ pub fn register_store(
     logo_uri: String,
 ) -> Result<()> {
     let store = &mut ctx.accounts.store;
-    let authority = &ctx.accounts.authority;
+    let owner = &ctx.accounts.owner;
 
-    store.owner = authority.key();
+    store.owner = owner.key();
     store.name = name;
     store.description = description;
     store.logo_uri = logo_uri;
@@ -130,10 +130,10 @@ pub fn refund_escrow(ctx: Context<RefundEscrow>, amount: u64) -> Result<()> {
 pub struct RegisterStore<'info> {
     #[account(
         init,
-        seeds = [b"store", authority.key().as_ref()],
+        seeds = [b"store", owner.key().as_ref()],
         bump,
-        payer = authority,
-        space = 8 + Store::LEN,
+        payer = payer,
+        space = Store::LEN,
     )]
     pub store: Account<'info, Store>,
 
@@ -141,14 +141,15 @@ pub struct RegisterStore<'info> {
         init,
         seeds = [b"escrow", store.key().as_ref()],
         bump,
-        payer = authority,
+        payer = payer,
         space = 0,
     )]
     /// CHECK: Escrow account to hold payments
     pub escrow: AccountInfo<'info>,
 
     #[account(mut)]
-    pub authority: Signer<'info>,
+    pub payer: Signer<'info>,
+    pub owner: Signer<'info>,
 
     pub system_program: Program<'info, System>,
 }
