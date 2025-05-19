@@ -1,3 +1,13 @@
 A new store can be registered successfully
 Store metadata can be fetched correctly
 Unauthorized updates are properly rejected
+
+A new product can be registered successfully
+Product metadata can be updated correctly
+Unauthorized product updates are properly rejected
+Products can be deactivated successfully
+
+Platform admins can be added successfully
+Platform admins can be removed successfully
+Unauthorized admin additions are properly rejected
+Unauthorized admin removals are properly rejected
