@@ -1,0 +1,12 @@
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/libbitflags-9d8850384dc20de0.rmeta: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/iter.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/parser.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/traits.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/public.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/internal.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/external.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/external/serde.rs
+
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/bitflags-9d8850384dc20de0.d: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/iter.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/parser.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/traits.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/public.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/internal.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/external.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/external/serde.rs
+
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/lib.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/iter.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/parser.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/traits.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/public.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/internal.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/external.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bitflags-2.9.1/src/external/serde.rs:

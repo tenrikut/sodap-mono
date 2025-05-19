@@ -1,0 +1,13 @@
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/libblake3-9bed322cd51c4c1b.rmeta: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/guts.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/hazmat.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/platform.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/ffi_neon.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/portable.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/traits.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/io.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/join.rs
+
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/blake3-9bed322cd51c4c1b.d: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/guts.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/hazmat.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/platform.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/ffi_neon.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/portable.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/traits.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/io.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/join.rs
+
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/lib.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/guts.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/hazmat.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/platform.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/ffi_neon.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/portable.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/traits.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/io.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/blake3-1.8.2/src/join.rs:

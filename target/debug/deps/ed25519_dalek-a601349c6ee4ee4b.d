@@ -1,0 +1,11 @@
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/libed25519_dalek-a601349c6ee4ee4b.rmeta: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/constants.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/keypair.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/errors.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/public.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/secret.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/signature.rs
+
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/ed25519_dalek-a601349c6ee4ee4b.d: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/constants.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/keypair.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/errors.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/public.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/secret.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/signature.rs
+
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/lib.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/constants.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/keypair.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/errors.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/public.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/secret.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ed25519-dalek-1.0.1/src/signature.rs:

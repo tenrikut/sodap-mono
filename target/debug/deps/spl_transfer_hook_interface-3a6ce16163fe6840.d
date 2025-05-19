@@ -1,0 +1,9 @@
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/libspl_transfer_hook_interface-3a6ce16163fe6840.rmeta: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/error.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/instruction.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/offchain.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/onchain.rs
+
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/spl_transfer_hook_interface-3a6ce16163fe6840.d: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/error.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/instruction.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/offchain.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/onchain.rs
+
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/lib.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/error.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/instruction.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/offchain.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spl-transfer-hook-interface-0.4.1/src/onchain.rs:

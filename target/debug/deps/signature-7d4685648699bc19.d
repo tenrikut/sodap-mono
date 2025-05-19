@@ -1,0 +1,11 @@
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/libsignature-7d4685648699bc19.rmeta: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/error.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/keypair.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/signature.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/signer.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/verifier.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/../README.md
+
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/signature-7d4685648699bc19.d: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/error.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/keypair.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/signature.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/signer.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/verifier.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/../README.md
+
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/lib.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/error.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/keypair.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/signature.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/signer.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/verifier.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/signature-1.6.4/src/../README.md:

@@ -1,0 +1,11 @@
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/libtinyvec-0a6d64fc589e61ff.rmeta: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/array.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/array/generated_impl.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/arrayvec.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/arrayvec_drain.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/slicevec.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/tinyvec.rs
+
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/tinyvec-0a6d64fc589e61ff.d: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/array.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/array/generated_impl.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/arrayvec.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/arrayvec_drain.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/slicevec.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/tinyvec.rs
+
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/lib.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/array.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/array/generated_impl.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/arrayvec.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/arrayvec_drain.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/slicevec.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tinyvec-1.9.0/src/tinyvec.rs:

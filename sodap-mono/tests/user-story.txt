@@ -1,1 +1,3 @@
-Now lets imrove sodap-mono/tests/store.ts, remember we need to test only mvp basict test for store in  anchor programs
+A new store can be registered successfully
+Store metadata can be fetched correctly
+Unauthorized updates are properly rejected

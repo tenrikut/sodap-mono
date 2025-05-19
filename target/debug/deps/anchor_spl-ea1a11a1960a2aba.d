@@ -1,0 +1,10 @@
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/libanchor_spl-ea1a11a1960a2aba.rmeta: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/associated_token.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/mint.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_2022.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_interface.rs
+
+/Users/tamkin/sodap/sodap-mono/target/debug/deps/anchor_spl-ea1a11a1960a2aba.d: /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/lib.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/associated_token.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/mint.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_2022.rs /Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_interface.rs
+
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/lib.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/associated_token.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/mint.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_2022.rs:
+/Users/tamkin/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anchor-spl-0.29.0/src/token_interface.rs:
