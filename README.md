@@ -11,7 +11,7 @@
 - [Overview](#-overview)
 - [Key Features](#-key-features)
 - [Blockchain Features](#-blockchain-features)
-  - [Fast & Secure Store Management Using PDAs](#-secure-store-management-using-pdas)
+  - [Secure Store Management Using PDAs](#-secure-store-management-using-pdas)
   - [On-Chain Data](#-on-chain-data)
   - [Tested Functionalities (18 Passing Tests)](#-tested-functionalities-18-passing-tests)
 - [Getting Started](#-getting-started)
