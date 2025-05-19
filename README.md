@@ -41,16 +41,25 @@ SoDap is a decentralized shopping platform powered by Solana blockchain. It aims
 - **Transparent Refunds**: On-chain verification provides faster dispute resolution
 
 #### 🔐 Authentication & User Management
-- Secure email/password  logins.
-- Store and Store Admin Management
+- **Admin Management**: Add and remove admins with proper authorization checks
+- **User Wallet Creation**: Create and verify user wallets directly on the blockchain
+- **Role Verification**: Validate transaction authority based on wallet signatures
 
 #### 🏪 Store Management
-- Intuitive dashboard for store and  store admin management.
-- Real-time updates for stock and sales.
+- **Store Registration**: Create stores with secure PDA-based identification
+- **Metadata Updates**: Update store information with proper ownership verification
+- **Owner-Based Control**: Store operations restricted to verified store owners
 
-#### 🛒 Shopping Experience
-- Modern interface for browsing products.
-- Comprehensive cart and order tracking features.
+#### 🛒 Product Management
+- **Product Registration**: Add products to stores with secure on-chain storage
+- **Product Updates**: Modify product details with ownership verification
+- **Product Deactivation**: Safely remove products from availability
+
+#### 💳 Payment Processing
+- **Purchase Cart**: Process purchases with escrow-based payment protection
+- **Fund Release**: Securely transfer funds from escrow to store owners
+- **Refund Handling**: Process refunds with proper authorization checks
+- **Error Resilience**: Graceful handling of insufficient funds scenarios
 
 ---
 
