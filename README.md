@@ -26,11 +26,6 @@
 
 SoDap is a decentralized shopping platform powered by the Solana blockchain. It aims to revolutionize in-store shopping by providing secure, transparent, and efficient shopping experiences for both customers and store owners through blockchain-based payment processing and store management.
 
-<div align="center">
-  <img src="public/sodap-architecture.jpg" alt="  SoDap Architecture" width="800" style="border-radius: 10px;">
-  <p><em>SoDap Architecture Design</em></p>
-</div>
-
 ---
 
 ### ✨ Key Features
@@ -129,6 +124,11 @@ yarn install
 ---
 
 ### 🔧 Architecture
+
+<div align="center">
+  <img src="public/sodap-architecture.jpg" alt="SoDap Architecture" width="800" style="border-radius: 10px;">
+  <p><em>SoDap Architecture Design</em></p>
+</div>
 
 #### Backend (Solana/Anchor)
 - **Program Architecture**: Rust-based Anchor program with modular instruction handlers
