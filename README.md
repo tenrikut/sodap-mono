@@ -1,7 +1,7 @@
 # SoDap - Solana Decentralized Shopping Platform
 
 <div align="center">
-  <img src="image" alt="SoDap Logo" width="800" style="border-radius: 10px;">
+  <img src="sodap.png" alt="SoDap Logo" width="800" style="border-radius: 10px;">
   <h3>Decentralized E-Commerce Powered by Solana Blockchain</h3>
 </div>
 
