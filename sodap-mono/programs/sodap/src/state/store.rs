@@ -1,15 +1,14 @@
 use crate::types::AdminRoleType;
-use crate::types::LoyaltyConfig;
+use crate::error::CustomError;
 use anchor_lang::prelude::*;
 
-#[account]
 #[derive(Debug)]
+#[account]
 pub struct Store {
     pub owner: Pubkey,
     pub name: String,
     pub description: String,
     pub logo_uri: String,
-    pub loyalty_config: LoyaltyConfig,
     pub is_active: bool,
     pub revenue: u64,    // accumulated withdrawn funds
     pub bump: u8,        // bump for store PDA
@@ -18,8 +17,42 @@ pub struct Store {
 }
 
 impl Store {
-    pub const LEN: usize =
-        8 + 32 + (4 + 200) + (4 + 500) + (4 + 200) + 16 + 1 + 8 + (4 + (33 * 10));
+    pub const MAX_ADMIN_ROLES: usize = 10;
+
+    // Space calculation:
+    // - 8 bytes for discriminator
+    // - 32 bytes for owner Pubkey
+    // - 4 + 200 bytes for name String
+    // - 4 + 500 bytes for description String
+    // - 4 + 200 bytes for logo_uri String
+    // - 1 byte for is_active bool
+    // - 8 bytes for revenue u64
+    // - 1 byte for bump
+    // - 1 byte for escrow_bump
+    // - 4 bytes for Vec length prefix
+    // - (32 + 1) * MAX_ADMIN_ROLES for admin_roles Vec (Pubkey + role_type)
+    // - 1 byte for is_active bool
+    // - 8 bytes for revenue u64
+    // - 1 byte for bump
+    // - 1 byte for escrow_bump
+    // - 4 bytes for Vec length prefix
+    // - (32 + 1) * MAX_ADMIN_ROLES for admin_roles Vec (Pubkey + role_type)
+    pub const LEN: usize = 8 +  // discriminator
+        32 +                    // owner
+        (4 + 200) +            // name
+        (4 + 500) +            // description
+        (4 + 200) +            // logo_uri
+        1 +                     // is_active
+        8 +                     // revenue
+        1 +                     // bump
+        1 +                     // escrow_bump
+        4 +                     // Vec length prefix
+        (33 * Self::MAX_ADMIN_ROLES); // admin_roles (Pubkey + role_type)
+
+    pub fn validate_admin_roles(&self) -> anchor_lang::Result<()> {
+        anchor_lang::require!(self.admin_roles.len() <= Self::MAX_ADMIN_ROLES, CustomError::TooManyAdmins);
+        Ok(())
+    }
 }
 // Store events
 #[event]
@@ -53,7 +86,7 @@ pub struct AdminRemoved {
 }
 
 // Store/admin accounts
-#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
+#[derive(Debug, Clone, Copy, AnchorSerialize, AnchorDeserialize)]
 pub struct AdminRole {
     pub admin_pubkey: Pubkey,
     pub role_type: AdminRoleType,

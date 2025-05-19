@@ -1,7 +1,6 @@
 use crate::error::CustomError;
 use crate::state::store::{AdminRole, Store};
 use crate::types::AdminRoleType;
-use crate::types::LoyaltyConfig;
 use anchor_lang::prelude::*;
 
 /// Instruction to register a new store
@@ -10,7 +9,6 @@ pub fn register_store(
     name: String,
     description: String,
     logo_uri: String,
-    loyalty_config: LoyaltyConfig,
 ) -> Result<()> {
     let store = &mut ctx.accounts.store;
     let authority = &ctx.accounts.authority;
@@ -19,7 +17,6 @@ pub fn register_store(
     store.name = name;
     store.description = description;
     store.logo_uri = logo_uri;
-    store.loyalty_config = loyalty_config;
     store.is_active = true;
     store.revenue = 0;
     store.admin_roles = vec![];
@@ -36,7 +33,6 @@ pub fn update_store(
     name: Option<String>,
     description: Option<String>,
     logo_uri: Option<String>,
-    loyalty_config: Option<LoyaltyConfig>,
 ) -> Result<()> {
     let store = &mut ctx.accounts.store;
     let authority = &ctx.accounts.owner;
@@ -53,9 +49,6 @@ pub fn update_store(
     }
     if let Some(logo_uri) = logo_uri {
         store.logo_uri = logo_uri;
-    }
-    if let Some(config) = loyalty_config {
-        store.loyalty_config = config;
     }
 
     Ok(())
@@ -169,6 +162,7 @@ pub struct ReleaseEscrow<'info> {
         mut,
         seeds = [b"escrow", store.key().as_ref()],
         bump = store.escrow_bump,
+        seeds::program = system_program.key()
     )]
     /// CHECK: escrow vault PDA
     pub escrow: AccountInfo<'info>,

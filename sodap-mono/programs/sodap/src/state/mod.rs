@@ -3,14 +3,12 @@ use anchor_lang::prelude::*;
 
 // Submodules for on-chain accounts and context structs
 pub mod admin;
-pub mod loyalty;
 pub mod product;
 pub mod store;
 pub mod user;
 
 // Re-export all relevant structs and context types
 pub use admin::*;
-pub use loyalty::*;
 pub use product::PurchaseCart;
 pub use product::*;
 pub use store::Store;
@@ -53,20 +51,7 @@ pub struct RefundEscrow<'info> {
 }
 
 #[account]
-pub struct LoyaltyMint {
-    pub store: Pubkey,
-    pub mint: Pubkey,
-    pub authority: Pubkey,
-    pub points_per_sol: u64,
-    pub redemption_rate: u64,
-    pub total_points_issued: u64,
-    pub total_points_redeemed: u64,
-    pub is_token2022: bool,
-}
-
-#[account]
 pub struct Escrow {
     pub store: Pubkey,
-    pub authority: Pubkey,
     pub balance: u64,
 }

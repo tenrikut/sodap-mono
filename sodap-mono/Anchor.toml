@@ -3,12 +3,13 @@
 
 [toolchain]
 # Use Yarn and Anchor 0.31.1
-package_manager = "yarn"
-anchor_version   = "0.31.0"
+anchor_version = "0.31.1"
+solana_version = "2.1.0"
+
 
 [programs.localnet]
 # This must match the `declare_id!()` in your lib.rs
-sodap = "4eLJ3QGiNrPN6UUr2fNxq6tUZqFdBMVpXkL2MhsKNriv"
+sodap = "DbsYHoEr7q4mqJMTrp7iEiXiCD9WPP8c39kPhJShTKMa"
 
 [provider]
 # Where to deploy and which keypair to use
@@ -24,7 +25,10 @@ url = "https://api.apr.dev"
 [features]
 # Enable workspace resolution & skip linting
 resolution = true
-skip-lint  = true
+skip-lint = true
+no-log-ix-name = true
+no-idl = true
+no-entrypoint = true
 
 [scripts]
 # Build the BPF program
@@ -32,10 +36,14 @@ build     = "anchor build"
 # Deploy to localnet
 deploy    = "anchor deploy --provider.cluster localnet"
 # Run your on-chain tests
-test      = "anchor test"
+test      = "anchor run test-script"
 # After building, copy the generated IDL & TypeScript into your frontend
 postbuild = "mkdir -p app/src/idl && cp target/idl/sodap.json app/src/idl/sodap.json && cp target/types/sodap.ts app/src/idl/sodap.ts && echo 'Successfully synced IDL files to frontend'"
+
+# Custom test script that only runs TypeScript tests
+test-script = "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [test.validator]
 # Reset validator state before tests
 reset = true
+startup_wait = 10000

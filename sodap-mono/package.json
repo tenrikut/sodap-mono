@@ -16,7 +16,7 @@
     "app:test": "cd app && yarn test"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1",
+    "@coral-xyz/anchor": "0.31.0",
     "@solana/pay": "^0.2.5",
     "@solana/spl-token": "^0.3.8",
     "@solana/web3.js": "^1.98.2",

@@ -27,7 +27,7 @@ codegen-units = 1
 opt-level = 3
 
 [dependencies]
-anchor-lang = { version = "0.31.0", features = ["init-if-needed"] }
-anchor-spl  = { version = "0.31.0", features = ["token", "token_2022"] }
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl  = { version = "0.31.1", features = ["token", "token_2022"] }
 borsh = "0.10.3"
-solana-program = "=2.1.21"
+proc-macro2 = { version = "1.0.67", features = ["span-locations"] }

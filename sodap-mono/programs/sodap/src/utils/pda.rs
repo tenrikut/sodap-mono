@@ -11,6 +11,10 @@ pub fn find_escrow_pda(program_id: &Pubkey, store: &Pubkey) -> (Pubkey, u8) {
 }
 
 pub fn verify_store_authority(store: &Account<Store>, authority: &Signer) -> Result<()> {
-    require!(store.owner == authority.key(), CustomError::Unauthorized);
+    require_keys_eq!(
+        store.owner,
+        authority.key(),
+        CustomError::Unauthorized
+    );
     Ok(())
 }

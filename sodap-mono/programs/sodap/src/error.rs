@@ -4,6 +4,8 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum CustomError {
+    #[msg("Too many admins. Maximum allowed is 10")]
+    TooManyAdmins,
     #[msg("Invalid price")]
     InvalidPrice,
     #[msg("Invalid stock")]
