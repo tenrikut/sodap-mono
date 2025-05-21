@@ -1,4 +1,4 @@
-# SoDap - Scan to go decentralized shopping application in physical stores.
+# SoDap - Scan to go decentralized in-store shopping platform .
 
 <div align="center">
   <img src="sodap.png" alt="SoDap Logo" width="1000" style="border-radius: 10px;">
