@@ -3,8 +3,10 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
+import { WALLET_CONFIG } from '@/config/wallets';
 
-const STORE_MANAGER_WALLET = '9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J';
+// Use the store manager wallet address from the central wallet config
+const STORE_MANAGER_WALLET = WALLET_CONFIG.STORE_MANAGER;
 
 export const useStoreManager = () => {
   const { data: session } = useSession();

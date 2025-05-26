@@ -3,7 +3,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useProfile } from '@/contexts/ProfileContext';
 
-const ProfileInfoTab: React.FC = () => {
+interface ProfileInfoTabProps {
+  isAdmin?: boolean;
+}
+
+const ProfileInfoTab: React.FC<ProfileInfoTabProps> = ({ isAdmin = false }) => {
   const { userProfile, walletAddress } = useProfile();
 
   return (

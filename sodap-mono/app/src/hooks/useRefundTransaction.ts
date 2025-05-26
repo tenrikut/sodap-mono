@@ -15,17 +15,26 @@ export const useRefundTransaction = () => {
   const { connection } = useConnection();
   const { publicKey: storeWallet, signTransaction } = useWallet();
 
-  const processRefund = useCallback(async (
-    returnRequest: ReturnRequest,
-    buyerWallet: PublicKey
-  ): Promise<RefundTransactionResult> => {
+  const processRefund = useCallback(async (purchase: any): Promise<RefundTransactionResult> => {
+    // Extract buyer wallet address from the purchase object
+    let buyerWallet;
+    try {
+      if (purchase.buyerAddress) {
+        buyerWallet = new PublicKey(purchase.buyerAddress);
+      } else {
+        throw new Error('Buyer wallet address is missing or invalid');
+      }
+    } catch (error) {
+      console.error('Error creating buyer PublicKey:', error);
+      throw new Error('Invalid buyer wallet address');
+    }
     try {
       if (!storeWallet || !signTransaction) {
         throw new Error('Store wallet not connected');
       }
 
       // Calculate total refund amount
-      const refundAmount = returnRequest.items.reduce(
+      const refundAmount = purchase.items.reduce(
         (total, item) => total + (item.price * item.quantity),
         0
       );

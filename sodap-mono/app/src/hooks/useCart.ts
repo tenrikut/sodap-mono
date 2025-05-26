@@ -39,11 +39,18 @@ export const useCart = () => {
   
   const subtotal = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem('cart');
+    toast.success("Cart has been cleared");
+  };
+
   return {
     cartItems,
     setCartItems,
     updateQuantity,
     removeItem,
+    clearCart,
     subtotal,
   };
 };

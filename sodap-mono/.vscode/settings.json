@@ -1,4 +1,15 @@
+// {
+//     "rust-analyzer.procMacro.enable": false
+//   }
+  
 {
-    "rust-analyzer.procMacro.enable": true
-  }
+    // Run build.rs and compile proc-macro crates when checking
+    "rust-analyzer.cargo.buildScripts.enable": true,          // :contentReference[oaicite:0]{index=0}
+  
+    // Globally turn on procedural-macro support
+    "rust-analyzer.procMacro.enable": true,                   // :contentReference[oaicite:1]{index=1}
+  
+    // Allow attribute macros (#[derive(Accounts)], #[program], etc.) to expand
+    "rust-analyzer.procMacro.attributes.enable": true         // :contentReference[oaicite:2]{index=2}
+}
   

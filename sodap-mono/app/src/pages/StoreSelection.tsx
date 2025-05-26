@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
+import { WALLET_CONFIG } from '@/config/wallets';
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { Input } from "@/components/ui/input";
@@ -70,9 +71,9 @@ const getAvailableStores = (): Store[] => {
       name: "Sodap Watch Store",
       location: "Tokyo, Japan",
       walletCreated: true,
-      walletAddress: "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J",
+      walletAddress: "HvG8jN4UinWpd3WAnEhH56qMi9dq6w3Rg1uj3sEmQ7q7",
       hasPda: true,
-      pdaAddress: "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo",
+      pdaAddress: "48s53bf2fe5MbhjxXquxan3W7QsNvjD5qDioJjVTPJEF",
     },
   ];
 
@@ -123,18 +124,18 @@ const getAvailableStores = (): Store[] => {
           // Fixed wallet for Sodap Watch Store
           watchStore.walletCreated = true;
           watchStore.walletAddress =
-            "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo";
+            "HvG8jN4UinWpd3WAnEhH56qMi9dq6w3Rg1uj3sEmQ7q7";
           watchStore.hasPda = true;
           watchStore.pdaAddress =
-            "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo";
+            "48s53bf2fe5MbhjxXquxan3W7QsNvjD5qDioJjVTPJEF";
 
           // Also save this to localStorage for the admin dashboard to use
           localStorage.setItem(
             `sodap-store-wallet-5`,
             JSON.stringify({
-              pub: "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo",
+              pub: "HvG8jN4UinWpd3WAnEhH56qMi9dq6w3Rg1uj3sEmQ7q7",
               sec: "58cb156e8e089675e3ba385e8b0db1853a0a7fb39d4257030be4dca2964050dd",
-              pda: "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo",
+              pda: "48s53bf2fe5MbhjxXquxan3W7QsNvjD5qDioJjVTPJEF",
             })
           );
 
@@ -145,9 +146,9 @@ const getAvailableStores = (): Store[] => {
               return {
                 ...store,
                 walletCreated: true,
-                walletAddress: "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J",
+                walletAddress: WALLET_CONFIG.STORE_MANAGER,
                 hasPda: true,
-                pdaAddress: "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo",
+                pdaAddress: "48s53bf2fe5MbhjxXquxan3W7QsNvjD5qDioJjVTPJEF",
               };
             }
             return store;
@@ -202,7 +203,7 @@ const StoreSelection: React.FC = () => {
           sec: "58cb156e8e089675e3ba385e8b0db1853a0a7fb39d4257030be4dca2964050dd", // Fake secret key
           pda:
             watchStore.pdaAddress ||
-            "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo",
+            "48s53bf2fe5MbhjxXquxan3W7QsNvjD5qDioJjVTPJEF",
         })
       );
     }
@@ -293,14 +294,19 @@ const StoreSelection: React.FC = () => {
 
   return (
     <Layout role="end_user">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">
-              Select a Store
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-sodap-purple mb-2">Welcome to SoDap</h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">Discover and shop from a variety of stores on the Solana blockchain. Start by selecting a store below.</p>
+        </div>
+        
+        <Card className="mb-8 shadow-md border-0">
+          <CardHeader className="bg-gradient-to-r from-sodap-purple/10 to-sodap-purple/5 pb-2">
+            <CardTitle className="text-2xl font-bold">
+              Find a Store
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="w-full md:w-1/4">
                 <Select
@@ -309,7 +315,7 @@ const StoreSelection: React.FC = () => {
                     setSearchType(value as "id" | "name")
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-sodap-purple/20">
                     <SelectValue placeholder="Search by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -329,12 +335,12 @@ const StoreSelection: React.FC = () => {
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="flex-1"
+                  className="flex-1 border-sodap-purple/20 focus-visible:ring-sodap-purple/30"
                 />
                 <Button
                   onClick={handleSearch}
-                  variant="outline"
-                  className="border-sodap-purple text-sodap-purple hover:bg-sodap-purple/5"
+                  variant="default"
+                  className="bg-sodap-purple hover:bg-sodap-purple/90"
                   disabled={isLoading}
                 >
                   <Search className="mr-2 h-4 w-4" />
@@ -345,36 +351,44 @@ const StoreSelection: React.FC = () => {
           </CardContent>
         </Card>
 
-        <h2 className="text-xl font-semibold mb-4">Available Stores</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">Featured Stores</h2>
+          <div className="text-sm text-gray-500">{filteredStores.length} stores available</div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredStores.map((store) => (
             <Card
               key={store.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              className="cursor-pointer hover:shadow-lg transition-all duration-300 border-0 shadow-md overflow-hidden group"
               onClick={() => handleStoreSelect(store.id)}
             >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
+              <div className="h-2 bg-gradient-to-r from-sodap-purple to-sodap-purple/70 group-hover:h-3 transition-all"></div>
+              <CardContent className="p-6">
+                <div className="flex flex-col space-y-4">
                   <div>
-                    <h3 className="font-bold">{store.name}</h3>
+                    <h3 className="font-bold text-lg group-hover:text-sodap-purple transition-colors">{store.name}</h3>
                     <p className="text-sm text-gray-600">ID: {store.id}</p>
                     <p className="text-sm text-gray-600">{store.location}</p>
-                    {store.walletCreated && (
-                      <p className="text-xs text-green-600 mt-1">
-                        ✓ Wallet Ready
-                      </p>
-                    )}
-                    {store.hasPda && (
-                      <p className="text-xs text-green-600">✓ PDA Ready</p>
-                    )}
+                    <div className="flex space-x-2 mt-2">
+                      {store.walletCreated && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          ✓ Wallet Ready
+                        </span>
+                      )}
+                      {store.hasPda && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          ✓ PDA Ready
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
-                    className="border-sodap-purple text-sodap-purple hover:bg-sodap-purple/5"
+                    className="w-full bg-sodap-purple hover:bg-sodap-purple/90 mt-2 group-hover:translate-y-0 translate-y-1 transition-transform"
                   >
-                    Select
+                    Shop Now
                   </Button>
                 </div>
               </CardContent>
@@ -383,8 +397,20 @@ const StoreSelection: React.FC = () => {
         </div>
 
         {filteredStores.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            No stores found matching your search criteria. Please try again.
+          <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border border-gray-100">
+            <Search className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+            <p className="font-medium">No stores found matching your search criteria.</p>
+            <p className="text-sm mt-1">Please try a different search term or browse our featured stores.</p>
+            <Button 
+              variant="outline" 
+              className="mt-4 border-sodap-purple text-sodap-purple hover:bg-sodap-purple/5"
+              onClick={() => {
+                setSearchValue('');
+                setFilteredStores(stores);
+              }}
+            >
+              View All Stores
+            </Button>
           </div>
         )}
       </div>

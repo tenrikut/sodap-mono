@@ -52,16 +52,7 @@ export function findReceiptPDA(
   return pda;
 }
 
-/**
- * Find the Loyalty Mint PDA for a store
- */
-export function findLoyaltyMintPDA(storePubkey: PublicKey): PublicKey {
-  const [pda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("loyalty_mint"), storePubkey.toBuffer()],
-    PROGRAM_ID
-  );
-  return pda;
-}
+
 
 /**
  * Convert lamports to SOL (as a number)

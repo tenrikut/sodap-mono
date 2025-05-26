@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Providers } from "./providers";
 import { SodapAnchorProvider } from "./contexts/AnchorContext";
 import { SolanaProvider } from "./components/providers/SolanaProvider";
@@ -22,7 +22,6 @@ import Payment from "./pages/Payment";
 import Store from "./pages/Store";
 import StoreSelection from "./pages/StoreSelection";
 import StoreDetail from "./pages/StoreDetail";
-import PurchaseHistory from "./pages/PurchaseHistory";
 
 const queryClient = new QueryClient();
 
@@ -34,7 +33,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<Navigate to="/landing" replace />} />
+            <Route path="/landing" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -50,7 +50,6 @@ const App = () => (
             <Route path="/payment" element={<Payment />} />
             <Route path="/store" element={<Store />} />
             <Route path="/store/:storeId" element={<StoreDetail />} />
-            <Route path="/purchase-history" element={<PurchaseHistory />} />
 
             {/* Dashboard Routes - Role based */}
             <Route path="/dashboard" element={<Dashboard role="end_user" />} />
@@ -69,6 +68,10 @@ const App = () => (
             <Route
               path="/dashboard/settings"
               element={<Dashboard role="store_manager" />}
+            />
+            <Route
+              path="/dashboard/admin-info"
+              element={<Dashboard role="platform_admin" />}
             />
             <Route
               path="/dashboard/refunds"

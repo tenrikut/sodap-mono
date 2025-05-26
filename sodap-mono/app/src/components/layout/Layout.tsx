@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNav = false, role = 'end_
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
+      <Header role={role} />
       
       <div className="flex flex-1">
         {!hideSidebar && !hideNav && (

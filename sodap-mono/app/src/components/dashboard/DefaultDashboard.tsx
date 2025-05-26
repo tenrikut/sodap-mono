@@ -30,10 +30,10 @@ const DefaultDashboard: React.FC<DefaultDashboardProps> = ({ role }) => {
       case 'end_user':
       default:
         return [
-          { title: 'Loyalty Points', value: '356' },
           { title: 'Orders', value: '12' },
           { title: 'Pending Returns', value: '1' },
           { title: 'Available SOL', value: '3.2' },
+          { title: 'Total Spent', value: '24.5 SOL' },
         ];
     }
   };

@@ -20,8 +20,8 @@ const FeaturesSection: React.FC = () => {
           <FeatureCard 
             icon={Store} 
             iconColor="bg-sodap-blue/10" 
-            title="Earn Points" 
-            description="Collect loyalty tokens with every purchase that you can redeem for discounts."
+            title="Transparent Transactions" 
+            description="All transactions are recorded on the Solana blockchain for complete transparency and security."
           />
           
           <FeatureCard 

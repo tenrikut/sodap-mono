@@ -34,13 +34,12 @@ const PaymentContent: React.FC = (): React.ReactElement => {
     connection,
     program,
   } = useAnchor();
-  const { cartItems } = useCart();
+  const { cartItems, clearCart } = useCart();
   const { addNewPurchase } = usePurchaseHistory();
   const { createReturnRequest, refreshRequests } = useReturnRequests();
   const [isProcessing, setIsProcessing] = useState(false);
   const [cartTotal, setCartTotal] = useState("0");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [earnedPoints, setEarnedPoints] = useState(0);
   const [transactionSignature, setTransactionSignature] = useState<
     string | null
   >(null);
@@ -129,7 +128,7 @@ const PaymentContent: React.FC = (): React.ReactElement => {
     // ALWAYS use these hardcoded values for this store to ensure it works
     if (selectedStoreId === "5") {
       const fixedWalletAddress = WALLET_CONFIG.STORE_MANAGER;
-      const fixedPdaAddress = "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo";
+      const fixedPdaAddress = "48s53bf2fe5MbhjxXquxan3W7QsNvjD5qDioJjVTPJEF";
 
       setStoreWalletAddress(fixedWalletAddress);
       setStorePda(fixedPdaAddress);
@@ -307,12 +306,24 @@ const PaymentContent: React.FC = (): React.ReactElement => {
           { duration: 10000 }
         );
 
-        // Create purchase data
+        // Get the store name from session storage
+        const storeName = sessionStorage.getItem('selectedStoreName');
+        
+        // If store name is missing, log a warning and save it to localStorage for debugging
+        if (!storeName) {
+          console.warn('Store name not found in sessionStorage. This will cause "Unknown Store" to appear in purchase history.');
+          console.log('Available in sessionStorage:', Object.keys(sessionStorage));
+        } else {
+          // Save the store name to localStorage for future reference
+          localStorage.setItem('sodap-selected-store-name', storeName);
+        }
+        
+        // Create purchase data with proper store name
         const purchase = {
           id: signature,
           transactionSignature: signature,
           date: new Date().toISOString(),
-          storeName: sessionStorage.getItem('selectedStoreName') || 'Unknown Store',
+          storeName: storeName || localStorage.getItem('sodap-selected-store-name') || 'Sodap Store',
           items: cartItems.map(item => ({
             name: item.product.name,
             quantity: item.quantity,
@@ -328,42 +339,21 @@ const PaymentContent: React.FC = (): React.ReactElement => {
         // Add purchase to history
         await addNewPurchase(purchase);
 
-        // Calculate earned points (1 point per SOL)
-        const points = Math.floor(parseFloat(cartTotal));
-        setEarnedPoints(points);
+        // Save purchase data for potential refunds to localStorage for persistence
+        localStorage.setItem('sodap-last-purchase', JSON.stringify(purchase));
 
-        // Save purchase data for potential refunds
-        sessionStorage.setItem('lastPurchase', JSON.stringify(purchase));
+        // Also save to purchases array in localStorage
+        const existingPurchases = JSON.parse(localStorage.getItem('sodap-purchases') || '[]');
+        localStorage.setItem('sodap-purchases', JSON.stringify([purchase, ...existingPurchases]));
+        
+        // Log that purchase was saved to localStorage
+        console.log('Purchase saved to localStorage:', purchase.id);
 
-        // Also save to purchases array
-        const existingPurchases = JSON.parse(sessionStorage.getItem('purchases') || '[]');
-        sessionStorage.setItem('purchases', JSON.stringify([purchase, ...existingPurchases]));
-
-        // Create a return request automatically
-        try {
-          // Wait a bit to ensure purchase data is saved
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Create return request
-          await createReturnRequest(
-            purchase,
-            'Automatically created for tracking purposes'
-          );
-
-          // Refresh the requests list
-          await refreshRequests();
-        } catch (error) {
-          console.error('Error creating return request:', error);
-          // Don't show error to user since this is automatic
-        }
+        // Note: We've removed the automatic return request creation.
+        // Returns should now be initiated by the user through the UI.
 
         // Show success dialog
         setShowSuccessDialog(true);
-
-        // Clear cart
-        sessionStorage.removeItem("cartItems");
-        sessionStorage.removeItem("cartTotal");
-      sessionStorage.removeItem("cartTotal");
       } catch (err: unknown) {
         console.error("Payment error:", err);
         let errorMessage = "Payment failed: Unknown error";
@@ -503,6 +493,9 @@ const PaymentContent: React.FC = (): React.ReactElement => {
   };
 
   const handleCloseSuccessDialog = (): void => {
+    // Clear cart using the clearCart function
+    clearCart();
+    
     setShowSuccessDialog(false);
     // Navigate to store selection page instead of cart
     navigate("/store-selection");
@@ -536,8 +529,6 @@ const PaymentContent: React.FC = (): React.ReactElement => {
       <PaymentSuccessDialog
         open={showSuccessDialog}
         onOpenChange={setShowSuccessDialog}
-        earnedPoints={earnedPoints}
-        currentPoints={userProfile.loyaltyPoints}
         onContinue={handleCloseSuccessDialog}
         transactionSignature={transactionSignature}
       />

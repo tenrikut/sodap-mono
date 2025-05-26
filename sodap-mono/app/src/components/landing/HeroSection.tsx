@@ -11,8 +11,8 @@ const HeroSection: React.FC = () => {
         <div className="flex flex-col md:flex-row items-center">
           <div className="md:w-1/2 mb-10 md:mb-0">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              <span className="text-sodap-purple">Web3</span> Shopping <br />
-              Made <span className="text-sodap-blue">Simple</span>
+              <span className="text-sodap-purple">Shop</span> On-Chain<br />
+              Walk Out <span className="text-sodap-blue">Free</span>
             </h1>
             <p className="text-lg text-gray-600 mb-8">
               SoDap connects Solana with everyday shopping. Fast, secure, rewarding.

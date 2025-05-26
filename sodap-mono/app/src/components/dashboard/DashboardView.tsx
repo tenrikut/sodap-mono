@@ -5,6 +5,7 @@ import PlatformAdminDashboard from '@/components/dashboard/PlatformAdminDashboar
 import StoreManagerDashboard from '@/components/dashboard/StoreManagerDashboard';
 import DefaultDashboard from '@/components/dashboard/DefaultDashboard';
 import SettingsPage from '@/components/dashboard/SettingsPage';
+import AdminInfoTab from '@/components/dashboard/AdminInfoTab';
 
 type DashboardViewProps = {
   role: 'platform_admin' | 'store_manager' | 'store_staff' | 'end_user';
@@ -17,6 +18,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({ role }) => {
   // Check if we're on the settings page
   if (currentPath === '/dashboard/settings') {
     return <SettingsPage />;
+  }
+  
+  // Check if we're on the admin info page
+  if (currentPath === '/dashboard/admin-info') {
+    return <AdminInfoTab role={role} />;
   }
   
   // Check if we're on the refunds page

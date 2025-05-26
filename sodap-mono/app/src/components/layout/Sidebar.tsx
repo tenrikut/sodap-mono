@@ -41,6 +41,8 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'end_user' }) => {
   const handleLogout = () => {
     // Clear any user data from sessionStorage
     sessionStorage.removeItem('username');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('userWallet');
     
     // Show toast notification
     toast({
@@ -48,8 +50,13 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'end_user' }) => {
       description: "You have been logged out of your account.",
     });
     
-    // Force immediate navigation to dashboard page
-    navigate('/dashboard', { replace: true });
+    // Check if we're on the manager dashboard and redirect to /dashboard
+    if (location.pathname === '/dashboard/manager') {
+      navigate('/dashboard', { replace: true });
+    } else {
+      // For other pages, navigate to landing page
+      navigate('/landing', { replace: true });
+    }
   };
 
   const getLinksByRole = (): SidebarLink[] => {
@@ -62,8 +69,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'end_user' }) => {
         case 'platform_admin':
           roleLinks = [
             { name: 'Dashboard', icon: <Home size={18} />, href: '/dashboard/admin' },
-            { name: 'Platform Admins', icon: <User size={18} />, href: '/dashboard/admins' },
-            { name: 'Store Managers', icon: <User size={18} />, href: '/dashboard/managers' },
+            { name: 'Admin Info', icon: <User size={18} />, href: '/dashboard/admin-info' },
+            { name: 'Platform Admins', icon: <Users size={18} />, href: '/dashboard/admins' },
+            { name: 'Store Managers', icon: <Users size={18} />, href: '/dashboard/managers' },
             { name: 'All Stores', icon: <Store size={18} />, href: '/dashboard/stores' },
             { name: 'Analytics', icon: <FileText size={18} />, href: '/dashboard/analytics' },
           ];
@@ -71,9 +79,6 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'end_user' }) => {
         case 'store_manager':
           roleLinks = [
             { name: 'Dashboard', icon: <Home size={18} />, href: '/dashboard/manager' },
-            { name: 'Products', icon: <FileText size={18} />, href: '/dashboard/products' },
-            { name: 'Refunds', icon: <RefreshCcw size={18} />, href: '/dashboard/refunds' },
-            { name: 'Staff', icon: <Users size={18} />, href: '/dashboard/staff' },
             { name: 'Settings', icon: <User size={18} />, href: '/dashboard/settings' },
           ];
           break;
@@ -105,11 +110,31 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'end_user' }) => {
       
       return roleLinks;
     } else {
-      // Non-dashboard pages: show regular user menu (remove Profile and Shop)
-      return [
-        { name: 'Cart', icon: <ShoppingCart size={18} />, href: '/cart' },
-        { name: 'Login', icon: <LogIn size={18} />, href: '/login' },
-      ];
+      // Non-dashboard pages: show regular user menu based on authentication status
+      const isAuthenticated = !!sessionStorage.getItem('username');
+      
+      if (isAuthenticated) {
+        return [
+          { name: 'Home', icon: <Home size={18} />, href: '/store-selection' },
+          { name: 'Shop', icon: <Store size={18} />, href: '/shop' },
+          { name: 'Profile', icon: <User size={18} />, href: '/profile' },
+          { name: 'Purchase History', icon: <FileText size={18} />, href: '/profile?tab=purchases' },
+          { name: 'Cart', icon: <ShoppingCart size={18} />, href: '/cart' },
+          { 
+            name: 'Logout', 
+            icon: <LogOut size={18} />, 
+            href: '#', 
+            onClick: handleLogout 
+          },
+        ];
+      } else {
+        return [
+          { name: 'Home', icon: <Home size={18} />, href: '/store-selection' },
+          { name: 'Shop', icon: <Store size={18} />, href: '/shop' },
+          { name: 'Cart', icon: <ShoppingCart size={18} />, href: '/cart' },
+          { name: 'Login', icon: <LogIn size={18} />, href: '/login' },
+        ];
+      }
     }
   };
 

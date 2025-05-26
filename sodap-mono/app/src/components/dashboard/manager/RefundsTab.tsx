@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
@@ -36,7 +37,26 @@ interface Purchase {
 
 const RefundsTab = () => {
   const { returnRequests, refreshRequests } = useReturnRequests();
+  // Filter requests to show both pending and approved requests
+  const [showAllRequests, setShowAllRequests] = useState(false);
+  
+  // Get all requests, including approved ones
+  const allRequests = React.useMemo(() => {
+    try {
+      const storedRequests = JSON.parse(localStorage.getItem("sodap-return-requests") || "[]");
+      return storedRequests;
+    } catch (err) {
+      console.error('Error parsing return requests from localStorage:', err);
+      return [];
+    }
+  }, [returnRequests]);
+  
+  // Display either all requests or just pending ones based on filter
+  const displayedRequests = React.useMemo(() => {
+    return showAllRequests ? allRequests : returnRequests;
+  }, [showAllRequests, allRequests, returnRequests]);
   const [selectedRequest, setSelectedRequest] = useState<ReturnRequest | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -47,9 +67,14 @@ const RefundsTab = () => {
   // Check if connected wallet is the store manager wallet
   const isStoreManagerWallet =
     publicKey?.toBase58() === WALLET_CONFIG.STORE_MANAGER;
+    
+  // Store manager wallet address for display
+  const storeManagerWallet = WALLET_CONFIG.STORE_MANAGER;
 
 
   const handleApproveRefund = async (request: ReturnRequest) => {
+    // Reset error message
+    setErrorMessage(null);
     try {
       // Check wallet connection
       if (!connected) {
@@ -66,170 +91,131 @@ const RefundsTab = () => {
       setSelectedRequest(request);
       setIsProcessing(true);
 
-      // Process refund using the stored buyer wallet address
+      // Process refund using the stored buyer address
       // Validate buyer address before creating PublicKey
       if (!request.buyerAddress) {
         toast.error('Buyer wallet address is missing');
         return;
       }
 
-      setIsProcessing(true);
-
       try {
-        // Get the request from sessionStorage to ensure we have the latest data
-        const storedRequests = JSON.parse(sessionStorage.getItem("returnRequests") || "[]");
-        const currentRequest = storedRequests.find((req: ReturnRequest) => req.id === request.id);
+        // Get the request from localStorage to ensure we have the latest data
+        const storedRequests = JSON.parse(localStorage.getItem("sodap-return-requests") || "[]");
         
+        // First try to find by ID
+        let currentRequest = storedRequests.find((req: ReturnRequest) => req.id === request.id);
+        
+        // If not found by ID, try to find by transaction signature as fallback
+        if (!currentRequest && request.transactionSignature) {
+          currentRequest = storedRequests.find(
+            (req: ReturnRequest) => req.transactionSignature === request.transactionSignature
+          );
+        }
+        
+        // If still not found, use the provided request but log a warning
         if (!currentRequest) {
-          toast.error('Return request not found');
-          return;
+          console.warn('Return request not found in localStorage, using provided request');
+          currentRequest = request;
         }
 
-        // Validate buyer address
-        if (!currentRequest.buyerAddress || typeof currentRequest.buyerAddress !== 'string') {
-          console.error('Missing buyer address:', currentRequest);
-          toast.error('Buyer wallet address is missing');
-          return;
-        }
-
-        // Create PublicKey from buyer address
-        let buyerPublicKey: PublicKey;
-        try {
-          buyerPublicKey = new PublicKey(currentRequest.buyerAddress.trim());
-        } catch (error) {
-          console.error('Error creating PublicKey:', error);
-          toast.error('Invalid buyer wallet address format');
-          return;
-        }
-
-        // Calculate total amount to refund
-        const totalAmount = currentRequest.items.reduce(
-          (sum, item) => sum + (item.price * item.quantity),
-          0
-        );
+        // Create a purchase object from the request
+        const purchase: Purchase = {
+          id: currentRequest.id,
+          transactionSignature: currentRequest.transactionSignature,
+          storeName: currentRequest.storeName,
+          items: currentRequest.items,
+          receiptAddress: currentRequest.receiptAddress,
+          storeAddress: currentRequest.storeAddress,
+          buyerAddress: currentRequest.buyerAddress,
+          purchaseTimestamp: currentRequest.purchaseTimestamp,
+          totalAmount: currentRequest.totalAmount
+        };
 
         // Process the refund
-        const result = await processRefund(
-          {
-            ...currentRequest,
-            totalAmount: totalAmount || currentRequest.totalAmount
-          },
-          buyerPublicKey
-        );
+        console.log('Processing refund for purchase:', purchase);
+        const result = await processRefund(purchase);
+        
+        if (result.status === 'success') {
+          console.log('Refund processed successfully:', result);
+          
+          // Update the request status in localStorage
+          const updatedRequests = storedRequests.map((req: ReturnRequest) => 
+            req.id === currentRequest.id ? { 
+              ...req, 
+              status: "Approved",
+              refundSignature: result.signature,
+              refundDate: new Date().toISOString()
+            } : req
+          );
+          localStorage.setItem("sodap-return-requests", JSON.stringify(updatedRequests));
 
-        if (!result?.signature) {
-          toast.error('No transaction signature received');
-          return;
+          toast.success("Refund processed successfully!");
+          setOpen(false);
+          
+          // Update the selected request with the refund information
+          if (selectedRequest) {
+            setSelectedRequest({
+              ...selectedRequest,
+              status: "Approved",
+              refundSignature: result.signature,
+              refundDate: new Date().toISOString()
+            });
+          }
+          
+          // Refresh the requests list
+          refreshRequests();
+          
+          // Dispatch an event to notify other components
+          window.dispatchEvent(new CustomEvent("refundRequestUpdate"));
+        } else {
+          setErrorMessage("Refund transaction failed. Please try again.");
+          toast.error("Failed to process refund");
         }
-
-        // Update request status in sessionStorage
-        const updatedRequests = storedRequests.map((req: ReturnRequest) =>
-          req.id === request.id ? { 
-            ...req, 
-            status: "Approved",
-            refundSignature: result.signature
-          } : req
-        );
-        sessionStorage.setItem("returnRequests", JSON.stringify(updatedRequests));
-
-        toast.success("Refund processed successfully!");
-        setOpen(false);
-
-        // Notify other tabs
-        window.dispatchEvent(new CustomEvent("refundRequestUpdate"));
-      } catch (error) {
-        console.error("Error processing refund:", error);
-        toast.error("Failed to process refund. Please try again.");
+      } catch (err) {
+        console.error('Error processing refund:', err);
+        setErrorMessage(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        toast.error("Failed to process refund");
       } finally {
         setIsProcessing(false);
       }
-    } catch (error) {
-      console.error("Error processing refund:", error);
-      toast.error("Failed to process refund. Please try again.");
-    } finally {
+    } catch (err) {
+      console.error('Error in handleApproveRefund:', err);
+      setErrorMessage(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error("Failed to process refund");
       setIsProcessing(false);
-      setSelectedRequest(null);
     }
   };
 
   const createPurchaseData = (signature: string): Purchase => {
+    // Create a mock purchase for testing
     return {
-      id: signature,
+      id: `purchase_${Math.random().toString(36).substring(2, 9)}`,
       transactionSignature: signature,
-      storeName: 'SoDap Store',
+      storeName: "SoDap Test Store",
       items: [
-        {
-          name: 'Watch Model X',
-          quantity: 1,
-          price: 0.1 // 0.1 SOL
-        }
+        { name: "Digital Art Print", price: 0.5, quantity: 1 },
+        { name: "Premium Frame", price: 0.2, quantity: 1 }
       ],
-      receiptAddress: signature,
-      storeAddress: WALLET_CONFIG.STORE_MANAGER,
-      buyerAddress: WALLET_CONFIG.DEFAULT_BUYER,
+      receiptAddress: "receipt_1",
+      storeAddress: "store_1",
+      buyerAddress: "DfhzrfdE5VDk43iP1NL8MLS5xFaxquxJVFtjhjRmHLAW",
       purchaseTimestamp: Math.floor(Date.now() / 1000),
-      totalAmount: 0.1
+      totalAmount: 0.7
     };
   };
 
   const addTransactionToRefunds = async (signature: string) => {
     try {
-      console.log('Adding transaction to refunds:', signature);
+      // Create a mock purchase
+      const purchase = createPurchaseData(signature);
       
-      // Try to get the purchase from lastPurchase first
-      let purchase: Purchase | null = null;
-      const lastPurchaseStr = sessionStorage.getItem('lastPurchase');
-      console.log('Last purchase from storage:', lastPurchaseStr);
-      
-      if (lastPurchaseStr) {
-        const lastPurchase = JSON.parse(lastPurchaseStr) as Purchase;
-        console.log('Parsed last purchase:', lastPurchase);
-        if (lastPurchase.transactionSignature === signature) {
-          purchase = lastPurchase;
-          console.log('Found purchase in lastPurchase');
-        }
-      }
-
-      // If not found in lastPurchase, try the purchases array
-      if (!purchase) {
-        console.log('Checking purchases array...');
-        const purchasesStr = sessionStorage.getItem('purchases');
-        console.log('Purchases from storage:', purchasesStr);
-        
-        if (purchasesStr) {
-          const purchases = JSON.parse(purchasesStr) as Purchase[];
-          console.log('Parsed purchases:', purchases);
-          purchase = purchases.find((p) => p.transactionSignature === signature);
-          if (purchase) {
-            console.log('Found purchase in purchases array');
-          }
-        }
-
-        // If still not found, create new purchase data
-        if (!purchase) {
-          console.log('Creating new purchase data for:', signature);
-          purchase = createPurchaseData(signature);
-          
-          // Save to purchases array
-          const purchases = JSON.parse(sessionStorage.getItem('purchases') || '[]') as Purchase[];
-          purchases.unshift(purchase);
-          sessionStorage.setItem('purchases', JSON.stringify(purchases));
-          console.log('Saved new purchase to storage');
-        }
-      }
-
-      if (!purchase) {
-        toast.error('Purchase not found for this transaction');
-        return;
-      }
-
-      // Create a new return request
+      // Create a return request
       const newRequest: ReturnRequest = {
         id: `ret_${Math.random().toString(36).substring(2, 9)}`,
         purchaseId: purchase.id,
         date: new Date().toISOString(),
         items: purchase.items,
-        reason: 'Customer requested refund',
+        reason: "Test return request",
         status: 'Pending',
         storeName: purchase.storeName,
         transactionSignature: purchase.transactionSignature,
@@ -239,23 +225,28 @@ const RefundsTab = () => {
         purchaseTimestamp: purchase.purchaseTimestamp,
         totalAmount: purchase.totalAmount
       };
-
-      // Get existing requests
-      const existingRequests = JSON.parse(sessionStorage.getItem('returnRequests') || '[]');
-
-      // Add new request
-      const updatedRequests = [newRequest, ...existingRequests];
-      sessionStorage.setItem('returnRequests', JSON.stringify(updatedRequests));
-
-      // Refresh the requests list
-      await refreshRequests();
-
-      toast.success('Return request created successfully');
       
-      // Scroll to the requests list
-      const requestsList = document.getElementById('pending-requests-list');
-      if (requestsList) {
-        requestsList.scrollIntoView({ behavior: 'smooth' });
+      // Add to localStorage
+      try {
+        const existingRequests = JSON.parse(localStorage.getItem("sodap-return-requests") || "[]");
+        const updatedRequests = [...existingRequests, newRequest];
+        localStorage.setItem("sodap-return-requests", JSON.stringify(updatedRequests));
+        
+        // Also update sessionStorage for backward compatibility
+        sessionStorage.setItem("returnRequests", JSON.stringify(updatedRequests));
+        
+        toast.success("Test return request added successfully");
+        
+        // Refresh the requests list
+        refreshRequests();
+        
+        // Dispatch an event to notify other components
+        window.dispatchEvent(new CustomEvent("returnRequestsUpdated", { 
+          detail: { requests: updatedRequests } 
+        }));
+      } catch (err) {
+        console.error('Error saving return request to localStorage:', err);
+        toast.error('Failed to save return request');
       }
     } catch (error) {
       console.error('Error adding transaction to refunds:', error);
@@ -277,12 +268,12 @@ const RefundsTab = () => {
         return;
       }
 
-      // Update request status in sessionStorage
-      const savedRequests = JSON.parse(sessionStorage.getItem("returnRequests") || "[]");
+      // Update request status in localStorage
+      const savedRequests = JSON.parse(localStorage.getItem("sodap-return-requests") || "[]");
       const updatedRequests = savedRequests.map((req: ReturnRequest) =>
         req.id === request.id ? { ...req, status: "Rejected" } : req
       );
-      sessionStorage.setItem("returnRequests", JSON.stringify(updatedRequests));
+      localStorage.setItem("sodap-return-requests", JSON.stringify(updatedRequests));
 
       setSelectedRequest(null);
       setOpen(false);
@@ -314,128 +305,126 @@ const RefundsTab = () => {
           </div>
         </div>
 
-        {!connected && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Wallet not connected</AlertTitle>
-            <AlertDescription>
-              Please connect your wallet to process refunds
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {connected && !isStoreManagerWallet && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTitle>Wrong wallet connected</AlertTitle>
-            <AlertDescription>
-              Please connect with the store manager wallet:
-              9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J
-            </AlertDescription>
-          </Alert>
-        )}
+        {!connected ? (
+          <Card className="mb-4">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <Alert className="mb-4 border-yellow-500 bg-yellow-50">
+                  <AlertTitle>Wallet not connected</AlertTitle>
+                  <AlertDescription>
+                    Please connect your wallet to manage refund requests.
+                  </AlertDescription>
+                </Alert>
+                <WalletMultiButton className="bg-sodap-purple hover:bg-sodap-purple/90" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : !isStoreManagerWallet ? (
+          <Card className="mb-4">
+            <CardContent className="pt-6">
+              <Alert className="mb-4 border-red-500 bg-red-50">
+                <AlertTitle>Wrong wallet connected</AlertTitle>
+                <AlertDescription>
+                  Please connect with the store manager wallet:
+                  <span className="font-mono text-sm block mt-1 bg-gray-100 p-1 rounded">
+                    {storeManagerWallet}
+                  </span>
+                </AlertDescription>
+              </Alert>
+              <div className="flex justify-center">
+                <WalletMultiButton className="bg-sodap-purple hover:bg-sodap-purple/90" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <div className="text-sm text-gray-500 mb-4">
           Total pending requests: {returnRequests.length}
         </div>
       </div>
 
-      {returnRequests.length === 0 ? (
-        <p className="text-gray-500">No pending refund requests.</p>
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Refund Requests</h3>
+          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+            {returnRequests.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-500">
+            {showAllRequests 
+              ? `Showing all requests (${allRequests.length})` 
+              : `Pending requests: ${returnRequests.length}`}
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowAllRequests(!showAllRequests)}
+          >
+            {showAllRequests ? "Show Pending Only" : "Show All Requests"}
+          </Button>
+        </div>
+      </div>
+
+      {displayedRequests.length === 0 ? (
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-2">No Refund Requests</h3>
+              <p className="text-gray-500">
+                {showAllRequests 
+                  ? "There are no refund requests to display." 
+                  : "There are no pending refund requests."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="space-y-4">
-          {returnRequests.map((request) => (
-            <Card
-              key={request.id}
+        <div className="grid gap-4">
+          {displayedRequests.map((request) => (
+            <Card 
+              key={request.id} 
+              className={`
+                ${request.status === "Approved" ? "border-green-200 bg-green-50" : ""}
+                ${request.status === "Rejected" ? "border-red-200 bg-red-50" : ""}
+                ${request.status === "Pending" ? "border-yellow-200" : ""}
+                hover:shadow-md transition-shadow
+              `}
               onClick={() => {
                 setSelectedRequest(request);
                 setOpen(true);
               }}
-              className="cursor-pointer hover:bg-gray-50"
             >
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <span>{request.storeName}</span>
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        request.status === "Pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : request.status === "Approved"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold">{request.storeName}</h4>
+                    <p className="text-sm text-gray-500">
+                      Request Date: {new Date(request.date).toLocaleDateString()}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Total: {request.totalAmount.toFixed(2)} SOL
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className={`
+                      px-3 py-1 rounded-full text-xs
+                      ${request.status === "Approved" ? "bg-green-100 text-green-800" : ""}
+                      ${request.status === "Rejected" ? "bg-red-100 text-red-800" : ""}
+                      ${request.status === "Pending" ? "bg-yellow-100 text-yellow-800" : ""}
+                    `}>
                       {request.status}
                     </span>
-                  </div>
-                  <span className="text-sm font-normal text-gray-500">
-                    {new Date(request.date).toLocaleDateString()}
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2">Items</h4>
-                    <div className="space-y-2">
-                      {request.items.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex justify-between text-sm"
-                        >
-                          <span>
-                            {item.name} x{item.quantity}
-                          </span>
-                          <span>{item.price.toFixed(2)} SOL</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2">
-                      Return Reason
-                    </h4>
-                    <p className="text-sm text-gray-500">{request.reason}</p>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2">Transaction</h4>
-                    <a
-                      href={`https://explorer.solana.com/tx/${request.transactionSignature}?cluster=devnet`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-500 hover:underline break-all"
-                    >
-                      {request.transactionSignature}
-                    </a>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    {request.status === "Pending" && (
-                      <>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleRejectRefund(request)}
-                        >
-                          Reject
-                        </Button>
-                        <Button
-                          onClick={() => handleApproveRefund(request)}
-                          className="bg-green-500 hover:bg-green-600"
-                          disabled={
-                            isProcessing || !connected || !isStoreManagerWallet
-                          }
-                        >
-                          {isProcessing ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Processing...
-                            </>
-                          ) : (
-                            "Process Refund"
-                          )}
-                        </Button>
-                      </>
+                    {request.status === "Approved" && request.refundSignature && (
+                      <a
+                        href={`https://explorer.solana.com/tx/${request.refundSignature}?cluster=devnet`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-500 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View Refund Transaction
+                      </a>
                     )}
                   </div>
                 </div>
@@ -444,14 +433,21 @@ const RefundsTab = () => {
           ))}
         </div>
       )}
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Refund Request Details</DialogTitle>
-            <p className="text-sm text-gray-500">
-              Review the refund request details before processing.
-            </p>
+            <DialogDescription>
+              Review the details of this refund request.
+            </DialogDescription>
           </DialogHeader>
+          {errorMessage && (
+            <Alert className="mb-4 border-yellow-500 bg-yellow-50">
+              <AlertTitle className="text-yellow-800">Warning</AlertTitle>
+              <AlertDescription className="text-yellow-700">{errorMessage}</AlertDescription>
+            </Alert>
+          )}
           {selectedRequest && (
             <div className="space-y-4">
               <div>
@@ -488,26 +484,51 @@ const RefundsTab = () => {
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handleRejectRefund(selectedRequest)}
-                >
-                  Reject
-                </Button>
-                <Button
-                  onClick={() => handleApproveRefund(selectedRequest)}
-                  className="bg-green-500 hover:bg-green-600"
-                  disabled={isProcessing || !connected || !isStoreManagerWallet}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    "Process Refund"
-                  )}
-                </Button>
+                {selectedRequest.status === "Approved" ? (
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Refunded
+                    </span>
+                    {selectedRequest.refundSignature && (
+                      <a
+                        href={`https://explorer.solana.com/tx/${selectedRequest.refundSignature}?cluster=devnet`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-500 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View Refund Transaction
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleRejectRefund(selectedRequest)}
+                      disabled={isProcessing || selectedRequest.status !== "Pending"}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      onClick={() => handleApproveRefund(selectedRequest)}
+                      className="bg-green-500 hover:bg-green-600"
+                      disabled={isProcessing || !connected || !isStoreManagerWallet || selectedRequest.status !== "Pending"}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Process Refund"
+                      )}
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}

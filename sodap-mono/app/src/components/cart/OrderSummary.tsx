@@ -17,11 +17,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
   isConnectingWallet, 
   hasItems 
 }) => {
-  const [loyaltyPoints, setLoyaltyPoints] = useState(20); // Mock loyalty points
-  const [pointsToRedeem, setPointsToRedeem] = useState(0);
-  
-  const discount = pointsToRedeem / 10; // Example: 10 points = 0.01 SOL
-  const total = Math.max(0, subtotal - discount).toFixed(3);
+  const total = subtotal.toFixed(3);
   
   return (
     <Card>
@@ -34,29 +30,7 @@ export const OrderSummary: React.FC<OrderSummaryProps> = ({
           <span>{subtotal.toFixed(3)} SOL</span>
         </div>
         
-        <div className="border-t pt-4">
-          <p className="mb-2">Loyalty Points: {loyaltyPoints} available</p>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min="0"
-              max={loyaltyPoints}
-              value={pointsToRedeem}
-              onChange={(e) => setPointsToRedeem(Math.min(loyaltyPoints, parseInt(e.target.value) || 0))}
-              className="border rounded px-2 py-1 w-20"
-            />
-            <span className="text-sm text-muted-foreground">
-              Points to redeem
-            </span>
-          </div>
-          
-          {pointsToRedeem > 0 && (
-            <div className="flex justify-between mt-2 text-sm">
-              <span>Points discount</span>
-              <span>-{discount.toFixed(3)} SOL</span>
-            </div>
-          )}
-        </div>
+
         
         <div className="flex justify-between font-bold text-lg border-t pt-4">
           <span>Total</span>

@@ -35,15 +35,23 @@ export interface ReturnRequest {
   buyerAddress: string;
   purchaseTimestamp: number;
   totalAmount: number;
+  refundSignature?: string;
+  refundDate?: string;
 }
 
 export const useReturnRequests = () => {
   const [returnRequests, setReturnRequests] = useState<ReturnRequest[]>([]);
 
   const refreshRequests = useCallback(async () => {
-    const storedRequests = sessionStorage.getItem('returnRequests');
+    const storedRequests = localStorage.getItem('sodap-return-requests');
     if (storedRequests) {
-      setReturnRequests(JSON.parse(storedRequests));
+      try {
+        const parsedRequests = JSON.parse(storedRequests);
+        console.log('Loaded return requests from localStorage:', parsedRequests.length);
+        setReturnRequests(parsedRequests);
+      } catch (err) {
+        console.error('Error parsing return requests:', err);
+      }
     }
   }, []);
 
@@ -53,7 +61,7 @@ export const useReturnRequests = () => {
 
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'returnRequests') {
+      if (e.key === 'sodap-return-requests') {
         const newRequests = e.newValue ? JSON.parse(e.newValue) : [];
         setReturnRequests(newRequests);
       }
@@ -81,11 +89,15 @@ export const useReturnRequests = () => {
         totalAmount: purchase.totalAmount
       };
 
-      const existingRequestsStr = sessionStorage.getItem('returnRequests');
+      const existingRequestsStr = localStorage.getItem('sodap-return-requests');
       const existingRequests = existingRequestsStr ? JSON.parse(existingRequestsStr) : [];
 
       const updatedRequests = [newRequest, ...existingRequests];
-      sessionStorage.setItem('returnRequests', JSON.stringify(updatedRequests));
+      localStorage.setItem('sodap-return-requests', JSON.stringify(updatedRequests));
+      
+      // Dispatch a custom event to notify other components
+      const event = new CustomEvent('refundRequestUpdate', { detail: updatedRequests });
+      window.dispatchEvent(event);
       setReturnRequests(updatedRequests);
 
       toast.success('Return request submitted successfully');

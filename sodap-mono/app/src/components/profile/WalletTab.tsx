@@ -8,7 +8,11 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useToast } from '@/hooks/use-toast';
 import { Keypair } from '@solana/web3.js';
 
-const WalletTab: React.FC = () => {
+interface WalletTabProps {
+  isAdmin?: boolean;
+}
+
+const WalletTab: React.FC<WalletTabProps> = ({ isAdmin = false }) => {
   const { walletAddress, setWalletAddress, walletSecret, setWalletSecret } = useProfile();
   const [isSecretVisible, setIsSecretVisible] = useState(false);
   const [isCreatingWallet, setIsCreatingWallet] = useState(false);

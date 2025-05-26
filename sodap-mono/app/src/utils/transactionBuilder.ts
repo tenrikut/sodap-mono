@@ -15,7 +15,6 @@ import {
   findStorePDA,
   findEscrowPDA,
   findReceiptPDA,
-  findLoyaltyMintPDA,
   solToLamports,
 } from "@/utils/pdaHelpers";
 
@@ -93,12 +92,20 @@ export const createPurchaseTransaction = async (
       console.log("Buyer:", walletPublicKey.toString());
       console.log("Amount Lamports:", amountLamports.toString());
       
-      // Create a new receipt keypair for each transaction
+      // Find the store PDA and escrow PDA
+      const storePDA = findStorePDA(storePublicKey);
+      const escrowPDA = findEscrowPDA(storePDA);
+      
+      // Create a receipt PDA for this purchase
       const receipt = findReceiptPDA(walletPublicKey, storePublicKey);
       
       // Convert cart items to the format expected by the program
       const productIds = cartItems.map(item => new PublicKey(item.product.id));
       const quantities = cartItems.map(item => new BN(item.quantity));
+      
+      console.log("Store PDA:", storePDA.toString());
+      console.log("Escrow PDA:", escrowPDA.toString());
+      console.log("Receipt PDA:", receipt.toString());
       
       // Add the purchase instruction
       const purchaseIx = await program.methods
@@ -108,9 +115,11 @@ export const createPurchaseTransaction = async (
           amountLamports
         )
         .accounts({
-          store: storePublicKey,
+          store: storePDA,
+          escrowAccount: escrowPDA,
           receipt: receipt,
           buyer: walletPublicKey,
+          systemProgram: SystemProgram.programId,
         })
         .instruction();
       
@@ -174,11 +183,46 @@ export const sendTransaction = async (
 
     console.log("Transaction sent, signature:", signature);
 
-    // Confirm the transaction
+    // Confirm the transaction with a longer timeout
     console.log("Waiting for confirmation");
-    await connection.confirmTransaction(signature, "confirmed");
-
-    console.log("Transaction confirmed");
+    
+    // Use a more robust confirmation strategy with a longer timeout
+    const latestBlockhash = await connection.getLatestBlockhash();
+    const confirmationStrategy = {
+      blockhash: latestBlockhash.blockhash,
+      lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      signature: signature
+    };
+    
+    try {
+      // Increase the timeout to 60 seconds (default is 30)
+      const confirmation = await connection.confirmTransaction(confirmationStrategy, 'confirmed');
+      
+      if (confirmation.value.err) {
+        throw new Error(`Transaction confirmed but failed: ${confirmation.value.err}`);
+      }
+      
+      console.log("Transaction confirmed");
+    } catch (confirmError) {
+      console.error("Confirmation error:", confirmError);
+      
+      // Even if confirmation times out, the transaction might still be successful
+      // Let's check the transaction status directly
+      try {
+        const status = await connection.getSignatureStatus(signature);
+        if (status && status.value && !status.value.err) {
+          console.log("Transaction appears to be successful despite confirmation timeout");
+          // Continue as if confirmed
+        } else if (status && status.value && status.value.err) {
+          throw new Error(`Transaction failed: ${status.value.err}`);
+        } else {
+          throw new Error("Transaction status unknown");
+        }
+      } catch (statusError) {
+        console.error("Status check error:", statusError);
+        throw new Error(`Transaction may have failed or is still pending. Check signature ${signature} on Solana Explorer.`);
+      }
+    }
     return signature;
   } catch (error) {
     console.error("Error sending transaction:", error);

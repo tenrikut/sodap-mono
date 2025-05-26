@@ -162,9 +162,9 @@ const defaultMockStores = [
     products: 12,
     customers: 45,
     walletCreated: true,
-    walletAddress: "9yg11hJpMpreQmqtCoVxR55DgbJ248wiT4WuQhksEz2J",
+    walletAddress: "HvG8jN4UinWpd3WAnEhH56qMi9dq6w3Rg1uj3sEmQ7q7",
     hasPda: true,
-    pdaAddress: "AjFmfk93LVedXVRXTdac2DWYbPYBYV6LeayyMzPU81qo",
+    pdaAddress: "48s53bf2fe5MbhjxXquxan3W7QsNvjD5qDioJjVTPJEF",
     location: "Tokyo, Japan",
   },
 ];

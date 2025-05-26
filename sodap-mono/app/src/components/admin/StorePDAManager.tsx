@@ -3,7 +3,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { PROGRAM_ID } from "@/utils/anchor";
+import { PROGRAM_ID as PROGRAM_ID_STRING } from "@/utils/anchor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
@@ -45,9 +45,12 @@ export const StorePDAManager: FC<StorePDAManagerProps> = ({
       const storePublicKey = new PublicKey(storeId);
       
       // Generate the PDA using the store ID and the program ID
+      // Convert PROGRAM_ID_STRING to a PublicKey object
+      const programId = new PublicKey(PROGRAM_ID_STRING);
+      
       const [storePDA] = PublicKey.findProgramAddressSync(
         [Buffer.from("store"), storePublicKey.toBuffer()],
-        PROGRAM_ID // Use the actual program ID from our application
+        programId // Use the program ID as a PublicKey object
       );
 
       const pdaAddress = storePDA.toString();
