@@ -133,43 +133,69 @@ const RefundsTab = () => {
 
         // Process the refund
         console.log('Processing refund for purchase:', purchase);
-        const result = await processRefund(purchase);
+        toast.loading("Processing refund transaction...", { id: "refund-toast" });
         
-        if (result.status === 'success') {
-          console.log('Refund processed successfully:', result);
+        try {
+          const result = await processRefund(purchase);
           
-          // Update the request status in localStorage
-          const updatedRequests = storedRequests.map((req: ReturnRequest) => 
-            req.id === currentRequest.id ? { 
-              ...req, 
-              status: "Approved",
-              refundSignature: result.signature,
-              refundDate: new Date().toISOString()
-            } : req
-          );
-          localStorage.setItem("sodap-return-requests", JSON.stringify(updatedRequests));
-
-          toast.success("Refund processed successfully!");
-          setOpen(false);
+          if (result.status === 'success') {
+            console.log('Refund processed successfully:', result);
+            toast.success("Refund processed successfully!", { id: "refund-toast" });
+            
+            // Update the request status in localStorage
+            const updatedRequests = storedRequests.map((req: ReturnRequest) => 
+              req.id === currentRequest.id ? { 
+                ...req, 
+                status: "Approved",
+                refundSignature: result.signature,
+                refundDate: new Date().toISOString()
+              } : req
+            );
+            localStorage.setItem("sodap-return-requests", JSON.stringify(updatedRequests));
+            
+            setOpen(false);
+            
+            // Update the selected request with the refund information
+            if (selectedRequest) {
+              setSelectedRequest({
+                ...selectedRequest,
+                status: "Approved",
+                refundSignature: result.signature,
+                refundDate: new Date().toISOString()
+              });
+            }
+            
+            // Refresh the requests list
+            refreshRequests();
+            
+            // Dispatch an event to notify other components
+            window.dispatchEvent(new CustomEvent("refundRequestUpdate"));
+          } else {
+            console.error('Refund transaction failed with status:', result.status);
+            setErrorMessage("Refund transaction failed. Please check your wallet balance and try again.");
+            toast.error("Failed to process refund. Please check your wallet balance.", { id: "refund-toast" });
+          }
+        } catch (err) {
+          console.error('Error in refund transaction:', err);
+          let errorMsg = "Refund transaction failed. ";
           
-          // Update the selected request with the refund information
-          if (selectedRequest) {
-            setSelectedRequest({
-              ...selectedRequest,
-              status: "Approved",
-              refundSignature: result.signature,
-              refundDate: new Date().toISOString()
-            });
+          // Extract more specific error message if available
+          if (err instanceof Error) {
+            if (err.message.includes("insufficient funds") || err.message.includes("Insufficient funds")) {
+              errorMsg += "Insufficient funds in store wallet. Please add SOL to the store wallet and try again.";
+            } else if (err.message.includes("timeout") || err.message.includes("Timeout")) {
+              errorMsg += "Transaction timed out. The network may be congested. Please try again later.";
+            } else if (err.message.includes("rejected")) {
+              errorMsg += "Transaction was rejected by your wallet.";
+            } else {
+              errorMsg += err.message;
+            }
+          } else {
+            errorMsg += "Please try again.";
           }
           
-          // Refresh the requests list
-          refreshRequests();
-          
-          // Dispatch an event to notify other components
-          window.dispatchEvent(new CustomEvent("refundRequestUpdate"));
-        } else {
-          setErrorMessage("Refund transaction failed. Please try again.");
-          toast.error("Failed to process refund");
+          setErrorMessage(errorMsg);
+          toast.error(errorMsg, { id: "refund-toast" });
         }
       } catch (err) {
         console.error('Error processing refund:', err);

@@ -51,63 +51,9 @@ export const usePurchaseHistory = () => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Generate demo purchases for testing if none exist
+  // This function is kept for backward compatibility but no longer generates demo purchases
   const generateDemoPurchases = useCallback(() => {
-    console.log('Generating demo purchases');
-    const demoPurchases: Purchase[] = [
-      {
-        id: 'purchase_1',
-        storeName: 'SoDap Demo Store',
-        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-        items: [
-          { name: 'Digital Art Print', price: 0.5, quantity: 1 },
-          { name: 'Premium Frame', price: 0.2, quantity: 1 }
-        ],
-        totalAmount: 0.7,
-        transactionSignature: '5KKsWtpQ9XpHD7z1KeWEJgUGmGdXdmXZQYQ8zFEpJQrTQpfg4iNZJf1bHLwmQiR3GXxRL2HvuR8bMnKEqKFrFBU4',
-        receiptAddress: 'receipt_1',
-        storeAddress: 'store_1',
-        buyerAddress: 'buyer_1',
-        purchaseTimestamp: Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60
-      },
-      {
-        id: 'purchase_2',
-        storeName: 'SoDap Art Gallery',
-        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-        items: [
-          { name: 'Limited Edition NFT', price: 1.2, quantity: 1 }
-        ],
-        totalAmount: 1.2,
-        transactionSignature: '4YUkwv1qNv3RyKMYFFE9yd44EC4FcYFXdNUWH9SYQbYkQaS2qz5eW7G2XcNLVhXHaFZ9j5sTnGsqNfYCmvJJKtBY',
-        receiptAddress: 'receipt_2',
-        storeAddress: 'store_2',
-        buyerAddress: 'buyer_2',
-        purchaseTimestamp: Math.floor(Date.now() / 1000) - 3 * 24 * 60 * 60,
-        isReturned: true,
-        returnStatus: 'Pending'
-      },
-      {
-        id: 'purchase_3',
-        storeName: 'SoDap Collectibles',
-        date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-        items: [
-          { name: 'Rare Digital Collectible', price: 0.8, quantity: 1 },
-          { name: 'Authentication Certificate', price: 0.1, quantity: 1 }
-        ],
-        totalAmount: 0.9,
-        transactionSignature: '3KLsWtpQ9XpHD7z1KeWEJgUGmGdXdmXZQYQ8zFEpJQrTQpfg4iNZJf1bHLwmQiR3GXxRL2HvuR8bMnKEqKFrFBU4',
-        receiptAddress: 'receipt_3',
-        storeAddress: 'store_3',
-        buyerAddress: 'buyer_3',
-        purchaseTimestamp: Math.floor(Date.now() / 1000) - 1 * 24 * 60 * 60,
-        isReturned: true,
-        returnStatus: 'Approved',
-        refundSignature: '2YUkwv1qNv3RyKMYFFE9yd44EC4FcYFXdNUWH9SYQbYkQaS2qz5eW7G2XcNLVhXHaFZ9j5sTnGsqNfYCmvJJKtBY',
-        refundDate: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString() // 12 hours ago
-      }
-    ];
-    
-    return demoPurchases;
+    return [];
   }, []);
 
   // Fetch purchases from blockchain or localStorage
@@ -128,10 +74,19 @@ export const usePurchaseHistory = () => {
             console.log('Found cached purchases:', cachedPurchases.length);
             // Set purchases from cache immediately while we try to fetch from blockchain
             setPurchases(cachedPurchases);
+          } else {
+            // If cached purchases are empty or invalid, show empty state
+            setPurchases([]);
           }
         } catch (err) {
           console.error('Error parsing cached purchases:', err);
+          // If there's an error parsing cached purchases, show empty state
+          setPurchases([]);
         }
+      } else {
+        // If no cached purchases exist, show empty state
+        console.log('No cached purchases found');
+        setPurchases([]);
       }
       
       // Try to fetch from blockchain if wallet is connected
@@ -139,10 +94,11 @@ export const usePurchaseHistory = () => {
         try {
           console.log('Fetching purchases from blockchain for wallet:', walletAddress.toString());
           
-          // Get recent signatures for the wallet
+          // Get recent signatures for the wallet - increase limit to 30 for more history
+          const walletPublicKey = new PublicKey(walletAddress);
           const signatures = await connection.getSignaturesForAddress(
-            walletAddress,
-            { limit: 10 }
+            walletPublicKey,
+            { limit: 30 } // Increased from 10 to 30
           );
           
           if (signatures.length > 0) {
@@ -161,10 +117,17 @@ export const usePurchaseHistory = () => {
                 
                 if (!tx || !tx.meta) continue;
                 
-                // Simple check for purchase transactions
+                // More lenient check for purchase transactions
                 // In a real app, you would check for specific program IDs
                 const isPurchase = tx.meta.logMessages?.some(
-                  msg => msg.includes("purchase") || msg.includes("payment")
+                  msg => {
+                    const msgLower = msg.toLowerCase();
+                    return msgLower.includes("purchase") || 
+                           msgLower.includes("payment") || 
+                           msgLower.includes("buy") || 
+                           msgLower.includes("transaction") ||
+                           msgLower.includes("sodap");
+                  }
                 );
                 
                 if (!isPurchase) continue;
@@ -205,6 +168,8 @@ export const usePurchaseHistory = () => {
                 }
               });
               
+              // We only want to show real purchases, no demo data
+              
               // Update state with all purchases
               setPurchases(allPurchases);
               
@@ -214,38 +179,42 @@ export const usePurchaseHistory = () => {
               
               setIsLoading(false);
               return;
+            } else {
+              // If no purchases were found in blockchain transactions
+              console.log('No purchases found in blockchain');
+              // Keep using cached purchases if available, otherwise show empty state
+              if (cachedPurchases.length === 0) {
+                setPurchases([]);
+              }
+            }
+          } else {
+            // If no signatures were found
+            console.log('No signatures found for wallet');
+            // Keep using cached purchases if available, otherwise show empty state
+            if (cachedPurchases.length === 0) {
+              setPurchases([]);
             }
           }
         } catch (err) {
           console.error('Error fetching from blockchain:', err);
           // Continue to use cached or demo data
+          if (cachedPurchases.length === 0) {
+            setPurchases([]);
+          }
         }
-      }
-      
-      // If we get here, either:
-      // 1. No wallet is connected
-      // 2. No blockchain purchases were found
-      // 3. There was an error fetching from blockchain
-      
-      // If we have cached purchases, use those
-      if (cachedPurchases.length > 0) {
-        console.log('Using cached purchases');
-        setPurchases(cachedPurchases);
       } else {
-        // Otherwise use demo data
-        console.log('No purchases found, using demo data');
-        const demoPurchases = generateDemoPurchases();
-        setPurchases(demoPurchases);
-        localStorage.setItem("sodap-purchases", JSON.stringify(demoPurchases));
+        // If no wallet is connected, make sure we're using demo data
+        if (cachedPurchases.length === 0) {
+          console.log('No wallet connected');
+          setPurchases([]);
+        }
       }
     } catch (err) {
       console.error('Error in fetchPurchases:', err);
       setError(`Error fetching purchases: ${err instanceof Error ? err.message : 'Unknown error'}`);
       
-      // Use demo data as fallback
-      const demoPurchases = generateDemoPurchases();
-      setPurchases(demoPurchases);
-      localStorage.setItem("sodap-purchases", JSON.stringify(demoPurchases));
+      // Show empty state as fallback
+      setPurchases([]);
     } finally {
       setIsLoading(false);
     }
@@ -278,14 +247,46 @@ export const usePurchaseHistory = () => {
 
   // Function to add a new purchase to the list
   const addPurchase = useCallback((newPurchase: Purchase) => {
-    setPurchases(prev => {
-      const updated = [newPurchase, ...prev];
-      
-      // Save to localStorage
-      localStorage.setItem("sodap-purchases", JSON.stringify(updated));
-      
-      return updated;
+    console.log('Adding new purchase to history:', newPurchase.id);
+    
+    // First, get the latest purchases from localStorage to ensure we have the most up-to-date data
+    let currentPurchases: Purchase[] = [];
+    try {
+      const storedPurchases = localStorage.getItem("sodap-purchases");
+      if (storedPurchases) {
+        const parsed = JSON.parse(storedPurchases);
+        if (Array.isArray(parsed)) {
+          currentPurchases = parsed;
+        }
+      }
+    } catch (err) {
+      console.error('Error reading current purchases from localStorage:', err);
+    }
+    
+    // Check if this purchase already exists (to avoid duplicates)
+    const purchaseExists = currentPurchases.some(p => p.id === newPurchase.id);
+    if (purchaseExists) {
+      console.log('Purchase already exists in history, not adding duplicate');
+      return;
+    }
+    
+    // Add the new purchase to the beginning of the array
+    const updated = [newPurchase, ...currentPurchases];
+    
+    // Save to localStorage
+    localStorage.setItem("sodap-purchases", JSON.stringify(updated));
+    console.log('Saved updated purchase history to localStorage with new purchase');
+    
+    // Update state
+    setPurchases(updated);
+    
+    // Dispatch a custom event to notify other components that a purchase was added
+    const purchaseEvent = new CustomEvent('sodap-purchase-added', { 
+      detail: { purchase: newPurchase } 
     });
+    window.dispatchEvent(purchaseEvent);
+    
+    return updated;
   }, []);
 
   return {

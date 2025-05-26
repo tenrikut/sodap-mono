@@ -35,7 +35,7 @@ const PaymentContent: React.FC = (): React.ReactElement => {
     program,
   } = useAnchor();
   const { cartItems, clearCart } = useCart();
-  const { addNewPurchase } = usePurchaseHistory();
+  const { addPurchase } = usePurchaseHistory();
   const { createReturnRequest, refreshRequests } = useReturnRequests();
   const [isProcessing, setIsProcessing] = useState(false);
   const [cartTotal, setCartTotal] = useState("0");
@@ -336,18 +336,14 @@ const PaymentContent: React.FC = (): React.ReactElement => {
           totalAmount: parseFloat(cartTotal)
         };
 
-        // Add purchase to history
-        await addNewPurchase(purchase);
+        // Add purchase to history - this will handle saving to localStorage
+        await addPurchase(purchase);
 
-        // Save purchase data for potential refunds to localStorage for persistence
+        // Also save the last purchase separately for easy access during refunds
         localStorage.setItem('sodap-last-purchase', JSON.stringify(purchase));
-
-        // Also save to purchases array in localStorage
-        const existingPurchases = JSON.parse(localStorage.getItem('sodap-purchases') || '[]');
-        localStorage.setItem('sodap-purchases', JSON.stringify([purchase, ...existingPurchases]));
         
-        // Log that purchase was saved to localStorage
-        console.log('Purchase saved to localStorage:', purchase.id);
+        // Log that purchase was saved
+        console.log('Purchase saved successfully:', purchase.id);
 
         // Note: We've removed the automatic return request creation.
         // Returns should now be initiated by the user through the UI.

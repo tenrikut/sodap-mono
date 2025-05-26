@@ -215,6 +215,24 @@ programs/
 3. **Account Reading**: Reading on-chain store and product data
 4. **Event Handling**: Processing transaction events for UI updates
 
+### Transaction Flows
+
+#### Purchase Flow
+
+The following diagram illustrates the purchase flow in SoDap, showing how customers interact with stores and the Solana blockchain:
+
+<div align="center">
+  <img src="public/Purchase flow.png" alt="SoDap Purchase Flow Diagram" width="800">
+</div>
+
+#### Refund Flow
+
+The following diagram illustrates the refund process in SoDap, showing how store managers process refund requests:
+
+<div align="center">
+  <img src="public/Refund flow.png" alt="SoDap Refund Flow Diagram" width="800">
+</div>
+
 ## 📊 Data Models
 
 ### Store

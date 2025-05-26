@@ -96,7 +96,7 @@ const PurchaseCard = ({ purchase, onRequestReturn }: { purchase: Purchase; onReq
 
 const PurchasesTab: React.FC = () => {
   const { walletAddress, connectWallet } = useAnchor();
-  const { purchases, isLoading, error, refetch } = usePurchaseHistory();
+  const { purchases, isLoading, error, refreshPurchases } = usePurchaseHistory();
   const { createReturnRequest } = useReturnRequests();
   
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
@@ -112,42 +112,54 @@ const PurchasesTab: React.FC = () => {
     
     try {
       // First try to refresh from the blockchain
-      await refetch();
+      await refreshPurchases();
       
-      // Check if we have purchases in state
-      if (purchases.length === 0) {
-        console.log('No purchases in state, checking localStorage directly');
-        
-        // Check localStorage directly as a fallback
-        const storedPurchases = localStorage.getItem('sodap-purchases');
-        if (storedPurchases) {
-          try {
-            const parsedPurchases = JSON.parse(storedPurchases);
+      // Check localStorage directly to ensure we have the latest data
+      const storedPurchases = localStorage.getItem('sodap-purchases');
+      if (storedPurchases) {
+        try {
+          const parsedPurchases = JSON.parse(storedPurchases);
+          if (Array.isArray(parsedPurchases) && parsedPurchases.length > 0) {
             console.log('Found purchases in localStorage:', parsedPurchases.length);
-            
-            if (parsedPurchases.length > 0) {
-              // We found purchases in localStorage, but we can't directly update state here
-              // Instead, we'll trigger a refresh which will load them
-              toast.success(`Found ${parsedPurchases.length} purchase${parsedPurchases.length === 1 ? '' : 's'} in your history`);
-              // Force a refresh of the purchase history hook
-              await refetch();
-            } else {
-              toast.info("No purchases found in your history");
-            }
-          } catch (err) {
-            console.error('Error parsing purchases from localStorage:', err);
+            setLocalPurchases(parsedPurchases);
+            toast.success(`Found ${parsedPurchases.length} purchase${parsedPurchases.length === 1 ? '' : 's'} in your history`);
+            return;
           }
-        } else {
-          console.log('No purchases found in localStorage');
-          toast.info("No purchases found in your history");
+        } catch (err) {
+          console.error('Error parsing purchases from localStorage:', err);
         }
+      }
+      
+      // If we get here, either there were no purchases in localStorage or there was an error
+      if (purchases.length === 0) {
+        console.log('No purchases found in state or localStorage');
+        setLocalPurchases([]);
+        toast.info('No purchase history found');
       } else {
-        console.log('Purchases already in state:', purchases.length);
+        console.log('Using purchases from state:', purchases.length);
+        setLocalPurchases(purchases);
         toast.success(`Found ${purchases.length} purchase${purchases.length === 1 ? '' : 's'} in your history`);
       }
     } catch (err) {
       console.error('Error refreshing purchases:', err);
       toast.error('Failed to refresh purchase history');
+      
+      // Try to use whatever we have in localStorage as a last resort
+      try {
+        const lastResortPurchases = localStorage.getItem('sodap-purchases');
+        if (lastResortPurchases) {
+          const parsed = JSON.parse(lastResortPurchases);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setLocalPurchases(parsed);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load purchases from localStorage as last resort:', e);
+      }
+      
+      // If all else fails, show empty state
+      setLocalPurchases([]);
     } finally {
       setIsRefreshing(false);
     }
@@ -159,10 +171,37 @@ const PurchasesTab: React.FC = () => {
     // This will use demo data if no wallet is connected
     const timer = setTimeout(() => {
       handleRefreshPurchases();
-    }, 1000);
+    }, 500); // Reduced timeout for faster loading
     
     return () => clearTimeout(timer);
   }, [walletAddress]);
+  
+  // Add a local state for purchases to avoid loading state issues
+  const [localPurchases, setLocalPurchases] = useState<Purchase[]>([]);
+  
+  // Update local purchases whenever the hook's purchases change
+  useEffect(() => {
+    if (purchases && purchases.length > 0) {
+      setLocalPurchases(purchases);
+      console.log('Updated local purchases from hook:', purchases.length);
+    }
+  }, [purchases]);
+  
+  // Listen for purchase-added events to update the purchase history in real-time
+  useEffect(() => {
+    const handlePurchaseAdded = (event: CustomEvent) => {
+      console.log('Purchase added event received in PurchasesTab');
+      // Force refresh the purchase history
+      handleRefreshPurchases();
+    };
+    
+    // Add event listener for the custom purchase event
+    window.addEventListener('sodap-purchase-added', handlePurchaseAdded as EventListener);
+    
+    return () => {
+      window.removeEventListener('sodap-purchase-added', handlePurchaseAdded as EventListener);
+    };
+  }, []);
   
   // Force refresh when the tab becomes visible
   useEffect(() => {
@@ -287,14 +326,14 @@ const PurchasesTab: React.FC = () => {
         </Button>
       </div>
 
-      {isLoading ? (
+      {isLoading && localPurchases.length === 0 ? (
         <div className="flex justify-center items-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="ml-2">Loading purchase history...</span>
         </div>
-      ) : purchases && purchases.length > 0 ? (
+      ) : localPurchases.length > 0 ? (
         <div className="space-y-4">
-          {purchases.map((purchase) => (
+          {localPurchases.map((purchase) => (
             <PurchaseCard 
               key={purchase.id} 
               purchase={purchase} 
