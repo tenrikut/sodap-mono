@@ -125,7 +125,7 @@ yarn install
 ### 🔧 Architecture
 
 <div align="center">
-  <img src="public/sodap-architecture.jpg" alt="SoDap Architecture" width="800" style="border-radius: 10px;">
+  <img src="Sodap.png" alt="SoDap Architecture" width="800" style="border-radius: 10px;">
   <p><em>SoDap Architecture Design</em></p>
 </div>
 
