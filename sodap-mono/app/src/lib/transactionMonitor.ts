@@ -39,6 +39,7 @@ export async function monitorTransaction(
       try {
         // If we have a signature, check it directly
         if (signature) {
+          // Try to get transaction with confirmed commitment
           const tx = await connection.getTransaction(signature, {
             commitment: "confirmed",
           });
@@ -48,6 +49,31 @@ export async function monitorTransaction(
             clearInterval(intervalId);
             resolve(tx.meta?.err ? "failed" : "success");
             return;
+          }
+
+          // Also check if transaction is still pending using getSignatureStatuses
+          const statusResponse = await connection.getSignatureStatuses([
+            signature,
+          ]);
+          const status = statusResponse.value[0];
+
+          if (status) {
+            if (status.err) {
+              clearTimeout(timeoutId);
+              clearInterval(intervalId);
+              resolve("failed");
+              return;
+            }
+            // If status exists but no error, transaction is confirmed/finalized
+            if (
+              status.confirmationStatus === "confirmed" ||
+              status.confirmationStatus === "finalized"
+            ) {
+              clearTimeout(timeoutId);
+              clearInterval(intervalId);
+              resolve("success");
+              return;
+            }
           }
         }
 
@@ -111,8 +137,49 @@ export function getTransactionStatusMessage(status: TransactionStatus): string {
       return "Unknown transaction status";
   }
 }
-function checkTransaction() {
-  throw new Error("Function not implemented.");
-}
 
-// removed stub
+/**
+ * Check the current status of a transaction signature
+ * Useful for checking pending transactions manually
+ * @param connection Solana connection instance
+ * @param signature Transaction signature to check
+ * @returns Promise that resolves with the transaction status
+ */
+export async function checkTransactionStatus(
+  connection: Connection,
+  signature: string
+): Promise<TransactionStatus> {
+  try {
+    // First try to get the transaction
+    const tx = await connection.getTransaction(signature, {
+      commitment: "confirmed",
+    });
+
+    if (tx) {
+      return tx.meta?.err ? "failed" : "success";
+    }
+
+    // If transaction not found, check signature status
+    const statusResponse = await connection.getSignatureStatuses([signature]);
+    const status = statusResponse.value[0];
+
+    if (status) {
+      if (status.err) {
+        return "failed";
+      }
+      if (
+        status.confirmationStatus === "confirmed" ||
+        status.confirmationStatus === "finalized"
+      ) {
+        return "success";
+      }
+      return "pending";
+    }
+
+    // If no status found, it might be too new or invalid
+    return "pending";
+  } catch (error) {
+    console.error("Error checking transaction status:", error);
+    return "failed";
+  }
+}
