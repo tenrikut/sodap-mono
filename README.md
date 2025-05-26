@@ -129,6 +129,26 @@ yarn install
   <p><em>SoDap Architecture Design</em></p>
 </div>
 
+#### Transaction Flows
+
+##### Purchase Flow
+
+The following diagram illustrates the purchase flow in SoDap, showing how customers interact with stores and the Solana blockchain:
+
+<div align="center">
+  <img src="public/Purchase flow.png" alt="SoDap Purchase Flow Diagram" width="800" style="border-radius: 10px;">
+  <p><em>Purchase Flow Process</em></p>
+</div>
+
+##### Refund Flow
+
+The following diagram illustrates the refund process in SoDap, showing how store managers process refund requests:
+
+<div align="center">
+  <img src="public/Refund flow.png" alt="SoDap Refund Flow Diagram" width="800" style="border-radius: 10px;">
+  <p><em>Refund Flow Process</em></p>
+</div>
+
 #### Backend (Solana/Anchor)
 - **Program Architecture**: Rust-based Anchor program with modular instruction handlers
 - **Account Structure**: Uses PDAs (Program Derived Addresses) for deterministic account generation
