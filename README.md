@@ -1,7 +1,7 @@
 # SoDap - Scan to go decentralized in-store shopping platform .
 
 <div align="center">
-  <img src="sodap.png" alt="SoDap Logo" width="1000" style="border-radius: 10px;">
+  <img src="sodap landing page.png" alt="SoDap Logo" width="1000" style="border-radius: 10px;">
   <h3>Decentralized Shopping </h3>
 </div>
 
