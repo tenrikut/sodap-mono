@@ -1,14 +1,17 @@
 [build]
-# Increase the BPF stack size
+# Default build config
+target = "aarch64-apple-darwin"
+
+[target.bpfel-unknown-unknown]
+# Solana BPF target config
 rustflags = [
     "-C", "link-arg=-z",
     "-C", "link-arg=stack-size=65536",
     "-C", "link-arg=--stack-first",
 ]
 
-[target.bpfel-unknown-unknown]
+# macOS native target config (no unsupported linker flags)
+[target.aarch64-apple-darwin]
 rustflags = [
-    "-C", "link-arg=-z",
-    "-C", "link-arg=stack-size=65536",
-    "-C", "link-arg=--stack-first",
+    # Remove problematic flags for macOS
 ] 
