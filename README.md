@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="sodap landing page.png" alt="SoDap Logo" width="1000" style="border-radius: 10px;">
-  <h3>Decentralized Shopping </h3>
+  <h3> Sodap Fast Shopping </h3>
 </div>
 
 ---
