@@ -5,15 +5,20 @@ export type TransactionStatus = "success" | "failed" | "timeout" | "pending";
 interface TransactionMonitorOptions {
   /**
    * Maximum time to wait for transaction confirmation (in milliseconds)
-   * @default 60000 (60 seconds)
+   * @default 45000 (45 seconds)
    */
   timeout?: number;
 
   /**
    * Polling interval for checking transaction status (in milliseconds)
-   * @default 1000 (1 second)
+   * @default 1500 (1.5 seconds)
    */
   interval?: number;
+
+  /**
+   * Last valid block height for transaction expiry check
+   */
+  lastValidBlockHeight?: number;
 }
 
 /**
@@ -30,55 +35,75 @@ export async function monitorTransaction(
   reference?: PublicKey,
   options: TransactionMonitorOptions = {}
 ): Promise<TransactionStatus> {
-  const { timeout = 60000, interval = 1000 } = options;
+  const { timeout = 45000, interval = 1500, lastValidBlockHeight } = options;
 
   return new Promise((resolve) => {
-    // (removed unused timeoutId declaration, now declared on assignment)
+    const startTime = Date.now();
+    let attempts = 0;
+    const maxAttempts = Math.ceil(timeout / interval);
+
+    console.log(`Monitoring transaction ${signature} for up to ${timeout}ms`);
 
     const checkTransaction = async () => {
       try {
+        attempts++;
+
         // If we have a signature, check it directly
         if (signature) {
-          // Try to get transaction with confirmed commitment
-          const tx = await connection.getTransaction(signature, {
-            commitment: "confirmed",
-          });
-
-          if (tx) {
-            clearTimeout(timeoutId);
-            clearInterval(intervalId);
-            resolve(tx.meta?.err ? "failed" : "success");
-            return;
-          }
-
-          // Also check if transaction is still pending using getSignatureStatuses
+          // Use getSignatureStatuses for faster response
           const statusResponse = await connection.getSignatureStatuses([
             signature,
           ]);
           const status = statusResponse.value[0];
 
-          if (status) {
+          if (status !== null) {
             if (status.err) {
+              console.error(`Transaction ${signature} failed:`, status.err);
               clearTimeout(timeoutId);
               clearInterval(intervalId);
               resolve("failed");
               return;
             }
-            // If status exists but no error, transaction is confirmed/finalized
+
+            // Check confirmation level
+            const confirmationLevel = status.confirmationStatus;
             if (
-              status.confirmationStatus === "confirmed" ||
-              status.confirmationStatus === "finalized"
+              confirmationLevel === "confirmed" ||
+              confirmationLevel === "finalized"
             ) {
+              console.log(
+                `Transaction ${signature} confirmed at level: ${confirmationLevel}`
+              );
               clearTimeout(timeoutId);
               clearInterval(intervalId);
               resolve("success");
+              return;
+            }
+
+            console.log(
+              `Transaction ${signature} found but not yet confirmed. Status: ${confirmationLevel}`
+            );
+          }
+
+          // Check if blockhash is still valid
+          if (lastValidBlockHeight) {
+            const currentBlockHeight = await connection.getBlockHeight(
+              "processed"
+            );
+            if (currentBlockHeight > lastValidBlockHeight) {
+              console.log(
+                `Transaction ${signature} expired (blockhash too old)`
+              );
+              clearTimeout(timeoutId);
+              clearInterval(intervalId);
+              resolve("failed");
               return;
             }
           }
         }
 
         // If we have a reference, check for transactions referencing it
-        if (reference) {
+        if (reference && !signature) {
           const signatures = await connection.getSignaturesForAddress(
             reference,
             {
@@ -103,7 +128,10 @@ export async function monitorTransaction(
           }
         }
       } catch (error) {
-        console.error("Error checking transaction:", error);
+        console.error(
+          `Error checking transaction status (attempt ${attempts}):`,
+          error
+        );
       }
     };
 
@@ -112,11 +140,16 @@ export async function monitorTransaction(
     // Set timeout
     const timeoutId = setTimeout(() => {
       clearInterval(intervalId);
+      console.log(
+        `Transaction ${signature} monitoring timed out after ${
+          Date.now() - startTime
+        }ms`
+      );
       resolve("timeout");
     }, timeout);
 
-    // Start polling
-    checkTransaction(); // Check immediately as well
+    // Start polling immediately
+    checkTransaction();
   });
 }
 
@@ -139,8 +172,7 @@ export function getTransactionStatusMessage(status: TransactionStatus): string {
 }
 
 /**
- * Check the current status of a transaction signature
- * Useful for checking pending transactions manually
+ * Fast transaction status check (doesn't wait)
  * @param connection Solana connection instance
  * @param signature Transaction signature to check
  * @returns Promise that resolves with the transaction status
@@ -150,36 +182,28 @@ export async function checkTransactionStatus(
   signature: string
 ): Promise<TransactionStatus> {
   try {
-    // First try to get the transaction
-    const tx = await connection.getTransaction(signature, {
-      commitment: "confirmed",
-    });
-
-    if (tx) {
-      return tx.meta?.err ? "failed" : "success";
-    }
-
-    // If transaction not found, check signature status
+    // Use getSignatureStatuses for faster response
     const statusResponse = await connection.getSignatureStatuses([signature]);
     const status = statusResponse.value[0];
 
-    if (status) {
-      if (status.err) {
-        return "failed";
-      }
-      if (
-        status.confirmationStatus === "confirmed" ||
-        status.confirmationStatus === "finalized"
-      ) {
-        return "success";
-      }
+    if (status === null) {
       return "pending";
     }
 
-    // If no status found, it might be too new or invalid
+    if (status.err) {
+      return "failed";
+    }
+
+    if (
+      status.confirmationStatus === "confirmed" ||
+      status.confirmationStatus === "finalized"
+    ) {
+      return "success";
+    }
+
     return "pending";
   } catch (error) {
     console.error("Error checking transaction status:", error);
-    return "failed";
+    return "pending";
   }
 }

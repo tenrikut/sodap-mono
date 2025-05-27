@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { WALLET_CONFIG } from "@/config/wallets";
@@ -18,6 +18,13 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
 import { ReturnRequest, useReturnRequests } from "@/hooks/useReturnRequests";
+import {
+  getProcessingRequests,
+  markRequestAsApproved,
+  markRequestAsFailed,
+  markRequestAsProcessing,
+  updateReturnRequest,
+} from "@/utils/returnRequestUtils";
 
 interface Purchase {
   id: string;
@@ -66,7 +73,7 @@ const RefundsTab = () => {
 
   // Wallet connection
   const { connected, publicKey } = useWallet();
-  const { processRefund } = useRefundTransaction();
+  const { processRefund, checkTransactionStatus } = useRefundTransaction();
 
   // Check if connected wallet is the store manager wallet
   const isStoreManagerWallet =
@@ -74,6 +81,102 @@ const RefundsTab = () => {
 
   // Store manager wallet address for display
   const storeManagerWallet = WALLET_CONFIG.STORE_MANAGER;
+
+  // Helper function to update request status in localStorage
+  const updateRequestStatus = useCallback(
+    (requestId: string, updates: Partial<ReturnRequest>) => {
+      try {
+        const storedRequests = JSON.parse(
+          localStorage.getItem("sodap-return-requests") || "[]"
+        );
+        const updatedRequests = storedRequests.map((req: ReturnRequest) =>
+          req.id === requestId ? { ...req, ...updates } : req
+        );
+        localStorage.setItem(
+          "sodap-return-requests",
+          JSON.stringify(updatedRequests)
+        );
+
+        // Refresh the requests list
+        refreshRequests();
+
+        // Dispatch an event to notify other components
+        window.dispatchEvent(new CustomEvent("refundRequestUpdate"));
+
+        return true;
+      } catch (error) {
+        console.error("Error updating request status:", error);
+        return false;
+      }
+    },
+    [refreshRequests]
+  );
+
+  // Function to check processing transactions
+  const checkProcessingTransactions = useCallback(async () => {
+    try {
+      const processingRequests = getProcessingRequests();
+
+      if (processingRequests.length === 0) {
+        return;
+      }
+
+      console.log(
+        `Checking ${processingRequests.length} processing transactions...`
+      );
+
+      // Check each processing transaction
+      for (const request of processingRequests) {
+        try {
+          const status = await checkTransactionStatus(request.refundSignature!);
+
+          if (status === "success") {
+            console.log(
+              `Transaction ${request.refundSignature} confirmed successfully`
+            );
+            markRequestAsApproved(request.id);
+
+            toast.success(
+              `Refund for ${request.storeName} confirmed successfully!`,
+              { duration: 5000 }
+            );
+
+            // Refresh the requests list
+            refreshRequests();
+          } else if (status === "failed") {
+            console.log(`Transaction ${request.refundSignature} failed`);
+            markRequestAsFailed(request.id);
+
+            toast.error(
+              `Refund transaction for ${request.storeName} failed. Please try again.`,
+              { duration: 8000 }
+            );
+
+            // Refresh the requests list
+            refreshRequests();
+          }
+          // If status is still "pending", keep checking
+        } catch (error) {
+          console.error(
+            `Error checking transaction ${request.refundSignature}:`,
+            error
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error checking processing transactions:", error);
+    }
+  }, [checkTransactionStatus, refreshRequests]);
+
+  // Set up automatic checking of processing transactions every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(checkProcessingTransactions, 30000); // 30 seconds
+
+    // Also check once immediately when component mounts
+    checkProcessingTransactions();
+
+    return () => clearInterval(interval);
+  }, [checkProcessingTransactions]);
 
   const handleApproveRefund = async (request: ReturnRequest) => {
     // Reset error message
@@ -156,21 +259,12 @@ const RefundsTab = () => {
               id: "refund-toast",
             });
 
-            // Update the request status in localStorage
-            const updatedRequests = storedRequests.map((req: ReturnRequest) =>
-              req.id === currentRequest.id
-                ? {
-                    ...req,
-                    status: "Approved",
-                    refundSignature: result.signature,
-                    refundDate: new Date().toISOString(),
-                  }
-                : req
-            );
-            localStorage.setItem(
-              "sodap-return-requests",
-              JSON.stringify(updatedRequests)
-            );
+            // Update the request status using utility function
+            updateReturnRequest(currentRequest.id, {
+              status: "Approved",
+              refundSignature: result.signature,
+              refundDate: new Date().toISOString(),
+            });
 
             setOpen(false);
 
@@ -186,9 +280,6 @@ const RefundsTab = () => {
 
             // Refresh the requests list
             refreshRequests();
-
-            // Dispatch an event to notify other components
-            window.dispatchEvent(new CustomEvent("refundRequestUpdate"));
           } else if (result.status === "pending") {
             console.log("Refund transaction is pending:", result);
             toast.info(
@@ -196,21 +287,8 @@ const RefundsTab = () => {
               { id: "refund-toast" }
             );
 
-            // Update the request with pending status and signature
-            const updatedRequests = storedRequests.map((req: ReturnRequest) =>
-              req.id === currentRequest.id
-                ? {
-                    ...req,
-                    status: "Processing",
-                    refundSignature: result.signature,
-                    refundDate: new Date().toISOString(),
-                  }
-                : req
-            );
-            localStorage.setItem(
-              "sodap-return-requests",
-              JSON.stringify(updatedRequests)
-            );
+            // Update the request with processing status using utility function
+            markRequestAsProcessing(currentRequest.id, result.signature);
 
             setOpen(false);
 
@@ -226,9 +304,6 @@ const RefundsTab = () => {
 
             // Refresh the requests list
             refreshRequests();
-
-            // Dispatch an event to notify other components
-            window.dispatchEvent(new CustomEvent("refundRequestUpdate"));
           } else {
             console.error(
               "Refund transaction failed with status:",
@@ -415,6 +490,21 @@ const RefundsTab = () => {
             Pending Refund Requests
           </h2>
           <div className="flex gap-4 items-center">
+            <Button
+              onClick={checkProcessingTransactions}
+              variant="outline"
+              size="sm"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Checking...
+                </>
+              ) : (
+                "Check Processing"
+              )}
+            </Button>
             <Button
               onClick={() =>
                 addTransactionToRefunds(
